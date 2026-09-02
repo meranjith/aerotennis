@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>AeroTennis | Audio Motion P2P</title>
+  <style>
+    :root {
+      --bg: #090a0f;
+      --card: #12141c;
+      --neon-green: #00ff88;
+      --neon-cyan: #00e5ff;
+      --neon-red: #ff3366;
+      --text: #ffffff;
+      --subtext: #7e859b;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+    }
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+      justify-content: space-between;
+      align-items: center;
+      padding: 24px;
+    }
+    header {
+      text-align: center;
+      margin-top: 10px;
+    }
+    h1 {
+      font-size: 1.8rem;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--neon-green);
+      text-shadow: 0 0 12px rgba(0, 255, 136, 0.4);
+    }
+    .badge {
+      font-size: 0.75rem;
+      letter-spacing: 1px;
+      color: var(--subtext);
+      margin-top: 4px;
+      text-transform: uppercase;
+    }
+    .status-panel {
+      background: var(--card);
+      border: 1px solid #232738;
+      border-radius: 16px;
+      padding: 20px;
+      width: 100%;
+      max-width: 480px;
+      text-align: center;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    }
+    .score-board {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .score-box {
+      display: flex;
+      flex-direction: column;
+    }
+    .player-label {
+      font-size: 0.85rem;
+      color: var(--subtext);
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+    .player-score {
+      font-size: 2.4rem;
+      font-weight: 800;
+      color: var(--neon-cyan);
+    }
+    .game-message {
+      font-size: 1.1rem;
+      font-weight: 600;
+      min-height: 1.5rem;
+      color: var(--neon-green);
+    }
+    .visualizer-container {
+      width: 100%;
+      max-width: 480px;
+      height: 160px;
+      background: var(--card);
+      border: 1px solid #232738;
+      border-radius: 16px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    canvas {
+      width: 100%;
+      height: 100%;
+    }
+    .controls {
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    button {
+      background: var(--neon-green);
+      color: #000;
+      border: none;
+      padding: 16px;
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      border-radius: 12px;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: transform 0.1s, filter 0.2s;
+    }
+    button:active {
+      transform: scale(0.98);
+      filter: brightness(0.9);
+    }
+    button.secondary {
+      background: #1d2130;
+      color: var(--text);
+      border: 1px solid #2f354d;
+    }
+    .connection-box {
+      background: var(--card);
+      border: 1px solid #232738;
+      border-radius: 12px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    textarea {
+      width: 100%;
+      height: 60px;
+      background: #0d0e14;
+      border: 1px solid #232738;
+      color: var(--neon-cyan);
+      font-family: monospace;
+      font-size: 0.75rem;
+      padding: 8px;
+      border-radius: 6px;
+      resize: none;
+    }
+    .sensor-readout {
+      font-size: 0.75rem;
+      color: var(--subtext);
+      font-family: monospace;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>AeroTennis</h1>
+    <div class="badge">Headphones Required • Hold Horizontally</div>
+  </header>
+
+  <div class="status-panel">
+    <div class="score-board">
+      <div class="score-box">
+        <span class="player-label" id="p1-label">You (P1)</span>
+        <span class="player-score" id="p1-score">0</span>
+      </div>
+      <div style="font-size: 1.5rem; color: var(--subtext);">:</div>
+      <div class="score-box">
+        <span class="player-label" id="p2-label">Opponent</span>
+        <span class="player-score" id="p2-score">0</span>
+      </div>
+    </div>
+    <div class="game-message" id="game-status">Initialize sensors to begin</div>
+  </div>
+
+  <div class="visualizer-container">
+    <canvas id="canvas"></canvas>
+  </div>
+
+  <div class="controls">
+    <button id="start-btn">1. Enable Audio & Motion</button>
+    
+    <div class="connection-box" id="p2p-setup" style="display: none;">
+      <button class="secondary" id="host-btn">Create Match (Host)</button>
+      <button class="secondary" id="join-btn">Join Match</button>
+      <textarea id="sdp-box" placeholder="Handshake Key will appear here..."></textarea>
+      <button class="secondary" id="connect-btn" style="display: none;">Complete Connection</button>
+    </div>
+
+    <button id="practice-btn" class="secondary" style="display: none;">Practice Mode (vs Wall)</button>
+    <div class="sensor-readout" id="sensor-debug">Accel: 0.0g | Side: Undefined</div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

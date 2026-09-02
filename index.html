@@ -401,20 +401,45 @@ class GameEngine {
 }
 
 /**
- * MULTIPLAYER ENGINE (PeerJS)
+ * MULTIPLAYER ENGINE (PeerJS) - UPDATED FOR STABILITY
  */
 let network = null;
 let game = null;
 
 class Multiplayer {
     constructor() {
-        // Generate random 6-digit code
         this.myId = Math.floor(100000 + Math.random() * 900000).toString();
-        this.peer = new Peer(this.myId);
+        
+        // FIX 1: Added Google STUN servers to punch through mobile/Wi-Fi firewalls
+        this.peer = new Peer(this.myId, {
+            config: {
+                'iceServers': [
+                    { urls: 'stun:stun.l.google.com:19302' },
+                    { urls: 'stun:stun1.l.google.com:19302' }
+                ]
+            },
+            debug: 2
+        });
+        
         this.conn = null;
+        this.isReady = false;
         
         this.peer.on('open', (id) => {
-            console.log('My Peer ID:', id);
+            console.log('Peer connected to server. ID:', id);
+            this.isReady = true;
+            // If the user already clicked Create Match before it was ready, update UI now
+            if(document.getElementById('lobbyStatus').innerText === "Generating secure code...") {
+                UI.setLobbyStatus(`Share this code: ${this.myId}`);
+            }
+        });
+
+        // FIX 2: Added error handling so the UI doesn't freeze in silence
+        this.peer.on('error', (err) => {
+            console.error("PeerJS Error:", err);
+            let errMsg = "Connection Failed.";
+            if (err.type === 'peer-unavailable') errMsg = "Code not found! Did the host create the match?";
+            else if (err.type === 'network') errMsg = "Lost connection to server.";
+            UI.setLobbyStatus(errMsg);
         });
 
         // Handle incoming connection (Host)
@@ -425,7 +450,13 @@ class Multiplayer {
     }
 
     connect(peerId) {
-        this.conn = this.peer.connect(peerId);
+        if (!this.isReady) {
+            UI.setLobbyStatus("Still connecting to server, try again in a second...");
+            return;
+        }
+        
+        // FIX 3: Forced reliable data channel
+        this.conn = this.peer.connect(peerId, { reliable: true });
         this.setupConnection(false);
     }
 
@@ -435,7 +466,7 @@ class Multiplayer {
             setTimeout(() => {
                 game = new GameEngine(isHost, false);
                 game.init();
-            }, 1000);
+            }, 1500);
         });
 
         this.conn.on('data', (data) => {
@@ -456,7 +487,7 @@ class Multiplayer {
 }
 
 /**
- * UI BINDINGS
+ * UI BINDINGS - UPDATED
  */
 function startGame(isPractice) {
     if (isPractice) {
@@ -467,20 +498,33 @@ function startGame(isPractice) {
 
 function showMultiplayer() {
     UI.switch('lobbyScreen');
-    if (!network) network = new Multiplayer();
+    if (!network) {
+        UI.setLobbyStatus("Connecting to multiplayer server...");
+        network = new Multiplayer();
+        setTimeout(() => {
+            if(network.isReady) UI.setLobbyStatus("");
+        }, 1000);
+    }
 }
 
 function createMatch() {
-    UI.setLobbyStatus(`Share this code: ${network.myId}`);
+    if (network && network.isReady) {
+        UI.setLobbyStatus(`Share this code: ${network.myId}`);
+    } else {
+        UI.setLobbyStatus("Generating secure code...");
+    }
 }
 
 function joinMatch() {
     const code = document.getElementById('joinCode').value;
     if (code.length === 6) {
-        UI.setLobbyStatus("Connecting...");
+        UI.setLobbyStatus("Finding opponent...");
         network.connect(code);
+    } else {
+        UI.setLobbyStatus("Please enter a 6-digit code.");
     }
 }
+
 
 </script>
 </body>

@@ -9,6 +9,7 @@
         :root {
             --neon-green: #39ff14;
             --neon-cyan: #00ffff;
+            --neon-red: #ff0055;
             --bg-dark: #0a0a0a;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Courier New', Courier, monospace; }
@@ -52,44 +53,51 @@
             width: 80%;
             outline: none;
         }
-        .status { margin-top: 20px; color: var(--neon-cyan); font-size: 1.2rem; }
-        .score-board { font-size: 2rem; color: var(--neon-green); margin-bottom: 20px; letter-spacing: 2px; }
-        .warning { color: #ff0055; margin-bottom: 15px; font-size: 0.9rem; }
+        .status { margin-top: 20px; color: var(--neon-cyan); font-size: 1.2rem; font-weight: bold; min-height: 30px;}
+        .feedback { color: var(--neon-red); font-size: 1rem; margin-top: 10px; min-height: 25px; }
+        .score-board { font-size: 3rem; color: var(--neon-green); margin-bottom: 10px; letter-spacing: 2px; text-shadow: 0 0 15px var(--neon-green); }
+        .warning { color: var(--neon-red); margin-bottom: 15px; font-size: 0.9rem; }
+        .instructions { margin-top: 40px; font-size: 0.85rem; color: #888; border: 1px solid #333; padding: 15px; border-radius: 5px; text-align: left;}
     </style>
 </head>
 <body>
 
+    <!-- MAIN MENU -->
     <div id="menuScreen" class="screen active">
         <h1>AeroTennis</h1>
         <p class="warning">⚠️ STEREO HEADPHONES STRICTLY MANDATORY</p>
-        <p class="warning">Hold phone horizontally.</p>
         <button onclick="startGame(true)">Wall Mode (Practice)</button>
         <button onclick="showMultiplayer()">Multiplayer</button>
+        <div class="instructions">
+            <strong>HOW TO PLAY:</strong><br><br>
+            1. Hold phone horizontally in one hand.<br>
+            2. <strong>Left Ear Sound:</strong> Screen must face YOU. Swing forward.<br>
+            3. <strong>Right Ear Sound:</strong> Screen must face AWAY. Swing forward.<br>
+            4. Swing when the sound is loudest!
+        </div>
     </div>
 
+    <!-- MULTIPLAYER LOBBY -->
     <div id="lobbyScreen" class="screen">
         <h1>Net-Link</h1>
         <button onclick="createMatch()">Create Match</button>
         <p style="margin: 15px 0;">OR</p>
         <input type="text" id="joinCode" placeholder="Enter 6-Digit Code" maxlength="6">
         <button onclick="joinMatch()">Join Match</button>
-        <button onclick="switchScreen('menuScreen')" style="border-color: gray; color: gray;">Back</button>
+        <button onclick="switchScreen('menuScreen')" style="border-color: gray; color: gray; box-shadow: none;">Cancel</button>
         <p id="lobbyStatus" class="status"></p>
     </div>
 
+    <!-- GAMEPLAY SCREEN -->
     <div id="gameScreen" class="screen">
         <div class="score-board" id="scoreBoard">0 - 0</div>
-        <p id="gameStatus" class="status">Waiting to serve...</p>
-        <div style="margin-top: 50px; font-size: 0.8rem; color: gray;">
-            Left Ball = Screen Facing YOU<br>
-            Right Ball = Screen Facing AWAY<br>
-            Swing forward to hit!
-        </div>
+        <p id="gameStatus" class="status">Initializing...</p>
+        <p id="gameFeedback" class="feedback"></p> <!-- Added specific debug feedback -->
     </div>
 
 <script>
 /**
- * CORE ARCHITECTURE
+ * UI & WAKE LOCK ARCHITECTURE
  */
 const UI = {
     switch: (id) => {
@@ -97,120 +105,96 @@ const UI = {
         document.getElementById(id).classList.add('active');
     },
     setStatus: (text) => document.getElementById('gameStatus').innerText = text,
+    setFeedback: (text) => document.getElementById('gameFeedback').innerText = text,
     setScore: (p1, p2) => document.getElementById('scoreBoard').innerText = `${p1} - ${p2}`,
     setLobbyStatus: (text) => document.getElementById('lobbyStatus').innerText = text
 };
 
 function switchScreen(id) { UI.switch(id); }
 
-/**
- * WAKE LOCK API
- */
 let wakeLock = null;
 async function requestWakeLock() {
     if ('wakeLock' in navigator) {
-        try {
-            wakeLock = await navigator.wakeLock.request('screen');
-            console.log('Screen Wake Lock active');
-        } catch (err) { console.error('Wake Lock error:', err); }
+        try { wakeLock = await navigator.wakeLock.request('screen'); } 
+        catch (err) { console.error('Wake Lock error:', err); }
     }
 }
+document.addEventListener('visibilitychange', async () => {
+    if (wakeLock !== null && document.visibilityState === 'visible') requestWakeLock();
+});
 
 /**
- * AUDIO ENGINE (Web Audio API & Synthetic Sounds)
+ * AUDIO ENGINE
  */
 class AudioEngine {
-    constructor() {
-        this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-    }
+    constructor() { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); }
+    async init() { if (this.ctx.state === 'suspended') await this.ctx.resume(); }
 
-    async init() {
-        if (this.ctx.state === 'suspended') await this.ctx.resume();
-    }
-
-    // Umpire Voice
     speak(text) {
         const utterance = new SpeechSynthesisUtterance(text);
-        utterance.rate = 1.1;
-        utterance.pitch = 0.9;
+        utterance.rate = 1.05; utterance.pitch = 0.9;
         speechSynthesis.speak(utterance);
     }
 
-    // Synthetic Ball Approach (Swoosh getting louder)
     playBallApproach(side, durationMs) {
         const osc = this.ctx.createOscillator();
         const gainNode = this.ctx.createGain();
         const panner = this.ctx.createStereoPanner();
 
-        // White noise approximation using rapid frequency modulation
         osc.type = 'triangle';
         osc.frequency.setValueAtTime(100, this.ctx.currentTime);
         osc.frequency.linearRampToValueAtTime(800, this.ctx.currentTime + (durationMs / 1000));
 
-        // Spatial Panning: -1 is Left, 1 is Right
         panner.pan.value = side;
 
-        // Volume Envelope (Starts quiet, gets loud, drops off)
         gainNode.gain.setValueAtTime(0.01, this.ctx.currentTime);
         gainNode.gain.exponentialRampToValueAtTime(1, this.ctx.currentTime + (durationMs / 1000) - 0.1);
         gainNode.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + (durationMs / 1000));
 
-        osc.connect(panner);
-        panner.connect(gainNode);
-        gainNode.connect(this.ctx.destination);
-
-        osc.start();
-        osc.stop(this.ctx.currentTime + (durationMs / 1000));
+        osc.connect(panner); panner.connect(gainNode); gainNode.connect(this.ctx.destination);
+        osc.start(); osc.stop(this.ctx.currentTime + (durationMs / 1000));
     }
 
-    // Hit / Miss SFX
     playSFX(type) {
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
+        osc.connect(gain); gain.connect(this.ctx.destination);
         
         const now = this.ctx.currentTime;
         if (type === 'perfect') {
-            // Loud Crack
             osc.type = 'square';
             osc.frequency.setValueAtTime(800, now);
             osc.frequency.exponentialRampToValueAtTime(100, now + 0.1);
             gain.gain.setValueAtTime(1, now);
             gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
-            osc.start(now);
-            osc.stop(now + 0.1);
+            osc.start(now); osc.stop(now + 0.1);
         } else if (type === 'poor') {
-            // Muffled thwack
             osc.type = 'sine';
             osc.frequency.setValueAtTime(300, now);
             osc.frequency.linearRampToValueAtTime(100, now + 0.2);
             gain.gain.setValueAtTime(0.5, now);
             gain.gain.linearRampToValueAtTime(0.01, now + 0.2);
-            osc.start(now);
-            osc.stop(now + 0.2);
+            osc.start(now); osc.stop(now + 0.2);
         } else if (type === 'miss') {
-            // Whiff and bounce
-            osc.type = 'sine';
+            osc.type = 'sawtooth';
             osc.frequency.setValueAtTime(150, now);
             osc.frequency.linearRampToValueAtTime(50, now + 0.5);
             gain.gain.setValueAtTime(0.3, now);
             gain.gain.linearRampToValueAtTime(0.01, now + 0.5);
-            osc.start(now);
-            osc.stop(now + 0.5);
+            osc.start(now); osc.stop(now + 0.5);
         }
     }
 }
-
 const audio = new AudioEngine();
 
 /**
- * MOTION ENGINE
+ * PRODUCTION MOTION ENGINE (Fixed Physics Bug)
  */
 class MotionEngine {
     constructor(onSwing) {
         this.onSwing = onSwing;
-        this.lastSwing = 0;
+        this.lastSwingTime = 0;
+        this.restingZGravity = 0; // Tracks orientation BEFORE the violent swing
     }
 
     async requestPermissions() {
@@ -231,19 +215,20 @@ class MotionEngine {
         window.addEventListener('devicemotion', (e) => {
             if (!e.acceleration || !e.accelerationIncludingGravity) return;
             
-            // Calculate pure acceleration magnitude for the swing force
-            const acc = e.acceleration;
-            const force = Math.sqrt(acc.x**2 + acc.y**2 + acc.z**2);
+            // Calculate pure swing force
+            const force = Math.sqrt(e.acceleration.x**2 + e.acceleration.y**2 + e.acceleration.z**2);
 
-            // Use gravity Z-axis to determine if screen is facing user or away
-            // Positive Z generally means screen is facing up/towards user.
-            // Negative Z means screen is facing down/away from user.
-            const zGravity = e.accelerationIncludingGravity.z;
-            const isScreenFacingUser = zGravity > 0;
+            // FIX: Only update resting orientation when the phone is relatively still.
+            // This prevents the swing force from overriding the gravity reading.
+            if (force < 3) {
+                this.restingZGravity = e.accelerationIncludingGravity.z;
+            }
 
-            // Threshold for a swing (requires testing on physical device, 15 is a solid starting point)
-            if (force > 15 && Date.now() - this.lastSwing > 800) {
-                this.lastSwing = Date.now();
+            // Detect Swing (Lowered threshold slightly for better responsiveness)
+            if (force > 12 && Date.now() - this.lastSwingTime > 1000) {
+                this.lastSwingTime = Date.now();
+                // Positive Z generally means screen facing user. Negative means screen facing away.
+                const isScreenFacingUser = this.restingZGravity > 0;
                 this.onSwing(isScreenFacingUser);
             }
         });
@@ -251,19 +236,18 @@ class MotionEngine {
 }
 
 /**
- * GAME LOGIC & SCORING
+ * GAME LOGIC ENGINE
  */
 class GameEngine {
     constructor(isHost, isPractice) {
         this.isHost = isHost;
         this.isPractice = isPractice;
         this.scores = { host: 0, guest: 0 };
-        this.scoreMap = [0, 15, 30, 40, 'Game'];
         
-        this.state = 'IDLE'; // IDLE, SERVING, IN_PLAY
+        this.state = 'IDLE'; 
         this.server = 'host';
         this.ballInFlight = false;
-        this.expectedSide = null; // -1 (Left), 1 (Right)
+        this.expectedSide = null; // -1 (Left/Screen towards you), 1 (Right/Screen away)
         this.ballArrivalTime = 0;
         
         this.motion = new MotionEngine(this.handleSwing.bind(this));
@@ -275,56 +259,64 @@ class GameEngine {
         const motionGranted = await this.motion.requestPermissions();
         if (motionGranted) {
             UI.switch('gameScreen');
-            if (this.isHost || this.isPractice) {
-                setTimeout(() => this.announceScoreAndServe(), 1000);
-            }
+            UI.setFeedback(""); // Clear feedback
+            setTimeout(() => this.announceScoreAndServe(), 1000);
         }
     }
 
     announceScoreAndServe() {
-        let text = "";
-        if (this.scores.host === 40 && this.scores.guest === 40) {
-            text = "Deuce.";
-        } else {
-            text = `${this.scores.host} - ${this.scores.guest}.`;
-        }
+        let text = (this.scores.host === 40 && this.scores.guest === 40) 
+            ? "Deuce." 
+            : `${this.scores.host} - ${this.scores.guest}.`;
         
-        let serverName = this.server === (this.isHost ? 'host' : 'guest') ? "Your turn to serve." : "Opponent to serve.";
-        if (this.isPractice) serverName = "Your turn to serve.";
+        let isMyServe = this.server === (this.isHost ? 'host' : 'guest') || this.isPractice;
+        let serverText = isMyServe ? "Your turn to serve." : "Opponent to serve.";
 
-        audio.speak(`${text} ${serverName}`);
-        UI.setStatus(serverName);
+        audio.speak(`${text} ${serverText}`);
+        UI.setStatus(serverText);
 
-        // Wait for announcement to finish before allowing serve
         setTimeout(() => {
             this.state = 'SERVING';
-            if (this.server === (this.isHost ? 'host' : 'guest') || this.isPractice) {
-                UI.setStatus("Swing to Serve!");
+            if (isMyServe) {
+                UI.setStatus("Swing forward to Serve!");
+                UI.setFeedback(""); 
             }
         }, 3000);
     }
 
     handleSwing(isScreenFacingUser) {
-        if (this.state === 'SERVING' && (this.server === (this.isHost ? 'host' : 'guest') || this.isPractice)) {
-            // Serve the ball
+        let isMyServe = this.server === (this.isHost ? 'host' : 'guest') || this.isPractice;
+
+        if (this.state === 'SERVING' && isMyServe) {
             this.state = 'IN_PLAY';
+            UI.setFeedback("");
             this.hitBall('perfect');
             return;
         }
 
         if (this.state === 'IN_PLAY' && this.ballInFlight) {
-            // Check logic: 
-            // Left Ball (-1) -> Screen Facing User (true)
-            // Right Ball (1) -> Screen Facing Away (false)
+            const timeNow = Date.now();
+            const timeDiff = timeNow - this.ballArrivalTime; // Negative = Early, Positive = Late
+            const absoluteDiff = Math.abs(timeDiff);
+            
+            // Left (-1) requires Screen Facing User (true)
+            // Right (1) requires Screen Facing Away (false)
             const sideCorrect = (this.expectedSide === -1 && isScreenFacingUser) || 
                                 (this.expectedSide === 1 && !isScreenFacingUser);
             
-            const timeDiff = Math.abs(Date.now() - this.ballArrivalTime);
-            
-            if (sideCorrect && timeDiff < 400) { // Sweet spot (400ms window)
-                let quality = timeDiff < 150 ? 'perfect' : 'poor';
-                this.hitBall(quality);
+            // 600ms sweet spot (very forgiving)
+            if (absoluteDiff < 600) { 
+                if (sideCorrect) {
+                    let quality = absoluteDiff < 250 ? 'perfect' : 'poor';
+                    this.hitBall(quality);
+                } else {
+                    let faceDir = isScreenFacingUser ? "YOU" : "AWAY";
+                    UI.setFeedback(`Miss! Wrong side. Screen was facing ${faceDir}`);
+                    this.missBall();
+                }
             } else {
+                if (timeDiff < -600) UI.setFeedback("Miss! Swung too EARLY.");
+                else if (timeDiff > 600) UI.setFeedback("Miss! Swung too LATE.");
                 this.missBall();
             }
         }
@@ -333,16 +325,14 @@ class GameEngine {
     hitBall(quality) {
         this.ballInFlight = false;
         audio.playSFX(quality);
-        UI.setStatus("Hit!");
+        UI.setStatus("HIT!");
+        UI.setFeedback(quality === 'perfect' ? "Perfect timing!" : "Good hit.");
         
-        // Randomize trajectory for opponent
         const nextSide = Math.random() > 0.5 ? -1 : 1; 
 
         if (this.isPractice) {
-            // Wall mode: ball comes right back after a delay
             setTimeout(() => this.receiveBall(nextSide), 1000);
         } else {
-            // Multiplayer: Send to opponent
             network.send({ type: 'HIT', side: nextSide });
         }
     }
@@ -352,16 +342,21 @@ class GameEngine {
         this.ballInFlight = true;
         this.expectedSide = side;
         
-        const travelTime = 1200; // ms
+        const travelTime = 1500; // Slightly slower ball for better reaction time
         this.ballArrivalTime = Date.now() + travelTime;
         
         audio.playBallApproach(side, travelTime);
-        UI.setStatus(side === -1 ? "Ball approaching Left!" : "Ball approaching Right!");
+        let sideText = side === -1 ? "LEFT (Face Screen to YOU)" : "RIGHT (Face Screen AWAY)";
+        UI.setStatus(`Ball approaching ${sideText}`);
+        UI.setFeedback(""); // Clear previous feedback
         
-        // Auto-miss if player doesn't swing
+        // Auto-miss if player doesn't swing at all
         setTimeout(() => {
-            if (this.ballInFlight) this.missBall();
-        }, travelTime + 400); 
+            if (this.ballInFlight) {
+                UI.setFeedback("Miss! You didn't swing.");
+                this.missBall();
+            }
+        }, travelTime + 700); 
     }
 
     missBall() {
@@ -369,20 +364,19 @@ class GameEngine {
         this.ballInFlight = false;
         audio.playSFX('miss');
         
-        // Point goes to whoever DID NOT just miss
         const winner = this.server === (this.isHost ? 'host' : 'guest') ? 'guest' : 'host';
         this.awardPoint(winner);
     }
 
     awardPoint(player) {
         this.state = 'IDLE';
-        // Simplified Tennis Scoring logic for demonstration
+        
         if (this.scores[player] === 30) this.scores[player] = 40;
         else if (this.scores[player] === 40) {
-            // simplified game win
             UI.setStatus("GAME OVER");
+            UI.setFeedback("");
             audio.speak("Game.");
-            setTimeout(() => location.reload(), 3000);
+            setTimeout(() => location.reload(), 4000);
             return;
         } else {
             this.scores[player] += 15;
@@ -394,14 +388,13 @@ class GameEngine {
             network.send({ type: 'SCORE', scores: this.scores });
         }
         
-        // Alternate server logic goes here (simplified to always alternate for now)
         this.server = this.server === 'host' ? 'guest' : 'host';
-        setTimeout(() => this.announceScoreAndServe(), 2000);
+        setTimeout(() => this.announceScoreAndServe(), 2500);
     }
 }
 
 /**
- * MULTIPLAYER ENGINE (PeerJS) - UPDATED FOR STABILITY
+ * MULTIPLAYER ENGINE (STUN Enabled)
  */
 let network = null;
 let game = null;
@@ -410,39 +403,31 @@ class Multiplayer {
     constructor() {
         this.myId = Math.floor(100000 + Math.random() * 900000).toString();
         
-        // FIX 1: Added Google STUN servers to punch through mobile/Wi-Fi firewalls
         this.peer = new Peer(this.myId, {
             config: {
                 'iceServers': [
                     { urls: 'stun:stun.l.google.com:19302' },
                     { urls: 'stun:stun1.l.google.com:19302' }
                 ]
-            },
-            debug: 2
+            }
         });
         
         this.conn = null;
         this.isReady = false;
         
         this.peer.on('open', (id) => {
-            console.log('Peer connected to server. ID:', id);
             this.isReady = true;
-            // If the user already clicked Create Match before it was ready, update UI now
             if(document.getElementById('lobbyStatus').innerText === "Generating secure code...") {
                 UI.setLobbyStatus(`Share this code: ${this.myId}`);
             }
         });
 
-        // FIX 2: Added error handling so the UI doesn't freeze in silence
         this.peer.on('error', (err) => {
-            console.error("PeerJS Error:", err);
             let errMsg = "Connection Failed.";
-            if (err.type === 'peer-unavailable') errMsg = "Code not found! Did the host create the match?";
-            else if (err.type === 'network') errMsg = "Lost connection to server.";
+            if (err.type === 'peer-unavailable') errMsg = "Code not found! Check code.";
             UI.setLobbyStatus(errMsg);
         });
 
-        // Handle incoming connection (Host)
         this.peer.on('connection', (connection) => {
             this.conn = connection;
             this.setupConnection(true);
@@ -451,11 +436,9 @@ class Multiplayer {
 
     connect(peerId) {
         if (!this.isReady) {
-            UI.setLobbyStatus("Still connecting to server, try again in a second...");
+            UI.setLobbyStatus("Still connecting to server...");
             return;
         }
-        
-        // FIX 3: Forced reliable data channel
         this.conn = this.peer.connect(peerId, { reliable: true });
         this.setupConnection(false);
     }
@@ -466,13 +449,12 @@ class Multiplayer {
             setTimeout(() => {
                 game = new GameEngine(isHost, false);
                 game.init();
-            }, 1500);
+            }, 1000);
         });
 
         this.conn.on('data', (data) => {
-            if (data.type === 'HIT') {
-                game.receiveBall(data.side);
-            } else if (data.type === 'SCORE') {
+            if (data.type === 'HIT') game.receiveBall(data.side);
+            else if (data.type === 'SCORE') {
                 game.scores = data.scores;
                 UI.setScore(game.scores.host, game.scores.guest);
             }
@@ -480,14 +462,12 @@ class Multiplayer {
     }
 
     send(data) {
-        if (this.conn && this.conn.open) {
-            this.conn.send(data);
-        }
+        if (this.conn && this.conn.open) this.conn.send(data);
     }
 }
 
 /**
- * UI BINDINGS - UPDATED
+ * UI BINDINGS
  */
 function startGame(isPractice) {
     if (isPractice) {
@@ -501,18 +481,13 @@ function showMultiplayer() {
     if (!network) {
         UI.setLobbyStatus("Connecting to multiplayer server...");
         network = new Multiplayer();
-        setTimeout(() => {
-            if(network.isReady) UI.setLobbyStatus("");
-        }, 1000);
+        setTimeout(() => { if(network.isReady) UI.setLobbyStatus(""); }, 1000);
     }
 }
 
 function createMatch() {
-    if (network && network.isReady) {
-        UI.setLobbyStatus(`Share this code: ${network.myId}`);
-    } else {
-        UI.setLobbyStatus("Generating secure code...");
-    }
+    if (network && network.isReady) UI.setLobbyStatus(`Share this code: ${network.myId}`);
+    else UI.setLobbyStatus("Generating secure code...");
 }
 
 function joinMatch() {
@@ -520,12 +495,8 @@ function joinMatch() {
     if (code.length === 6) {
         UI.setLobbyStatus("Finding opponent...");
         network.connect(code);
-    } else {
-        UI.setLobbyStatus("Please enter a 6-digit code.");
-    }
+    } else UI.setLobbyStatus("Please enter a 6-digit code.");
 }
-
-
 </script>
 </body>
 </html>

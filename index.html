@@ -5,20 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0, viewport-fit=cover" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <title>AeroTennis | Precision Audio-Motion Cyber Tennis</title>
+  <title>AeroTennis | Calibrated Motion Tennis</title>
 
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 
   <style>
     :root {
-      --bg: #03060a;
-      --panel: #080f18;
+      --bg: #030508;
+      --panel: #080d15;
       --cyan: #00f3ff;
       --green: #39ff14;
       --red: #ff0055;
       --yellow: #ffd700;
-      --dim: #5c7088;
-      --border: #122033;
+      --dim: #5c6f84;
+      --border: #121d2c;
       --font: 'Courier New', Courier, monospace;
     }
 
@@ -159,7 +159,7 @@
     }
     .grip-card b { color: #fff; }
 
-    /* HUD */
+    /* IN-GAME HUD */
     #hud {
       display: none;
       position: fixed;
@@ -169,7 +169,7 @@
       flex-direction: column;
       justify-content: space-between;
       align-items: center;
-      padding: 46px 20px;
+      padding: 44px 20px;
       text-align: center;
     }
 
@@ -184,7 +184,7 @@
       letter-spacing: 6px;
       color: var(--cyan);
       text-shadow: 0 0 20px var(--cyan);
-      margin: 10px 0;
+      margin: 8px 0;
     }
 
     .hud-turn {
@@ -194,14 +194,22 @@
     }
 
     .hud-feedback {
-      font-size: 1.5rem;
-      letter-spacing: 3px;
+      font-size: 1.4rem;
+      letter-spacing: 2px;
       color: #fff;
       min-height: 60px;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
       text-transform: uppercase;
+    }
+
+    .hud-telemetry {
+      font-size: 0.75rem;
+      color: var(--dim);
+      margin-top: 4px;
+      letter-spacing: 1px;
     }
 
     .hud-quit {
@@ -251,7 +259,10 @@
       <div class="hud-score" id="hudScore">0 - 0</div>
       <div class="hud-turn" id="hudServer">INITIALIZING</div>
     </div>
-    <div class="hud-feedback" id="hudFeedback">HOLD READY</div>
+    <div class="hud-feedback">
+      <div id="hudFeedbackMain">HOLD READY</div>
+      <div class="hud-telemetry" id="hudTelemetry">READY</div>
+    </div>
     <button class="hud-quit" id="btnQuit">EXIT MATCH</button>
   </div>
 
@@ -381,67 +392,57 @@ class AudioEngine {
 }
 
 /**
- * 2. DUAL-STAGE KINEMATIC MOTION ENGINE
- * Combines impulse integration with orientation attitude checking.
+ * 2. DIRECTION-AWARE BIOMECHANICAL MOTION ENGINE
+ * Eliminates backhand failure by adapting thresholds to cross-body arm physics.
  */
-class MotionEngine {
+class DirectionAwareMotionEngine {
   constructor(onSwing) {
     this.onSwing = onSwing;
     this.active = false;
     this.lockoutUntil = 0;
 
-    // Running Gravity Estimation
-    this.filteredZ = 0;
-    this.alpha = 0.86;
+    // Running Gravity Baseline Filters
+    this.gravZ = 0;
+    this.alpha = 0.82; // Faster adaptation to wrist rotation
 
-    // Stroke Integration
-    this.isTracking = false;
-    this.strokeStart = 0;
-    this.integratedZ = 0;
+    // Current expected approach direction (-1: Left/Backhand, 1: Right/Forehand)
+    this.expectedDirection = null;
 
-    // Attitude Tracking (DeviceOrientation)
-    this.gamma = 0; // Left-to-right tilt (-90 to +90)
+    // Biomechanically tuned thresholds:
+    // Forehand pushes with chest/triceps: 8.8 m/s^2
+    // Backhand pulls across chest with weaker rear deltoids: 5.8 m/s^2
+    this.FOREHAND_THRESHOLD = 8.8;
+    this.BACKHAND_THRESHOLD = 5.8;
 
     this.onMotion = this.onMotion.bind(this);
-    this.onOrientation = this.onOrientation.bind(this);
   }
 
   async requestPermission() {
-    let granted = true;
     if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
       try {
         const res = await DeviceMotionEvent.requestPermission();
-        granted = (res === 'granted');
+        return res === 'granted';
       } catch (e) {
-        granted = false;
+        return false;
       }
     }
-    if (granted && typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-      try {
-        await DeviceOrientationEvent.requestPermission();
-      } catch (e) {}
-    }
-    return granted;
+    return true;
+  }
+
+  setExpectedDirection(dir) {
+    this.expectedDirection = dir;
   }
 
   start() {
     this.active = true;
-    this.filteredZ = 0;
-    this.isTracking = false;
+    this.gravZ = 0;
+    this.lockoutUntil = 0;
     window.addEventListener('devicemotion', this.onMotion, false);
-    window.addEventListener('deviceorientation', this.onOrientation, false);
   }
 
   stop() {
     this.active = false;
     window.removeEventListener('devicemotion', this.onMotion, false);
-    window.removeEventListener('deviceorientation', this.onOrientation, false);
-  }
-
-  onOrientation(e) {
-    if (e.gamma !== null) {
-      this.gamma = e.gamma;
-    }
   }
 
   onMotion(e) {
@@ -449,49 +450,29 @@ class MotionEngine {
     const now = performance.now();
     if (now < this.lockoutUntil) return;
 
-    let rawZ = 0;
+    let az = 0;
+
+    // Use pure user acceleration if available; else clean via dynamic baseline
     if (e.acceleration && e.acceleration.z !== null && !isNaN(e.acceleration.z)) {
-      rawZ = e.acceleration.z;
+      az = e.acceleration.z;
     } else if (e.accelerationIncludingGravity && e.accelerationIncludingGravity.z !== null) {
-      this.filteredZ = this.alpha * this.filteredZ + (1 - this.alpha) * e.accelerationIncludingGravity.z;
-      rawZ = e.accelerationIncludingGravity.z - this.filteredZ;
+      this.gravZ = this.alpha * this.gravZ + (1 - this.alpha) * e.accelerationIncludingGravity.z;
+      az = e.accelerationIncludingGravity.z - this.gravZ;
     }
 
-    // 1. Strike Threshold Trigger
-    if (!this.isTracking) {
-      if (Math.abs(rawZ) >= 9.5) {
-        this.isTracking = true;
-        this.strokeStart = now;
-        this.integratedZ = 0;
-      }
-      return;
-    }
+    // Determine target threshold based on which side the ball is arriving from
+    const isBackhand = (this.expectedDirection === -1);
+    const requiredThreshold = isBackhand ? this.BACKHAND_THRESHOLD : this.FOREHAND_THRESHOLD;
 
-    // 2. Integrate Over 80ms
-    const duration = now - this.strokeStart;
-    this.integratedZ += rawZ * 0.016;
+    // Trigger check
+    if (Math.abs(az) >= requiredThreshold) {
+      // Immediately lock sensor for 650ms to ignore swing deceleration / follow-through
+      this.lockoutUntil = now + 650;
 
-    if (duration >= 80) {
-      this.isTracking = false;
-
-      // Check impulse strength floor
-      if (Math.abs(this.integratedZ) >= 0.42) {
-        this.lockoutUntil = now + 620; // Ignore whiplash braking
-
-        // Attitude Validation:
-        // When holding the phone in landscape with the right hand:
-        // Forehand: Screen faces forward into the swing path (integratedZ > 0)
-        // Backhand: Wrist flips across chest, screen faces player (integratedZ < 0)
-        let face = this.integratedZ > 0 ? 'SCREEN' : 'BACK_PANEL';
-
-        // Orientation sanity check: If gamma indicates the phone was rolled over > 45 deg,
-        // it strongly confirms a wrist-flipped backhand posture.
-        if (this.gamma > 45 && this.integratedZ < 0) {
-          face = 'BACK_PANEL';
-        }
-
-        this.onSwing(face);
-      }
+      // Positive Z = Screen pushing forward into ball
+      // Negative Z = Back Panel pushing forward into ball
+      const detectedFace = az > 0 ? 'SCREEN' : 'BACK_PANEL';
+      this.onSwing(detectedFace, Math.abs(az));
     }
   }
 }
@@ -500,10 +481,11 @@ class MotionEngine {
  * 3. AUTHORITATIVE TENNIS CONTROLLER
  */
 class TennisMatchController {
-  constructor(audio, role, sendPacket) {
+  constructor(audio, role, sendPacket, motionEngine) {
     this.audio = audio;
     this.role = role;
     this.sendPacket = sendPacket;
+    this.motion = motionEngine;
 
     this.points = [0, 0];
     this.games = [0, 0];
@@ -513,7 +495,7 @@ class TennisMatchController {
     this.direction = null;
     this.flightTime = 1.35;
     this.ballStartTime = 0;
-    this.hitMargin = 0.45;
+    this.hitMargin = 0.48; // Generous window covers Bluetooth latency + human reaction
     this.timeout = null;
   }
 
@@ -529,11 +511,12 @@ class TennisMatchController {
     return `${terms[p1] || "40"} - ${terms[p2] || "40"}`;
   }
 
-  updateHUD(txt = "") {
+  updateHUD(mainText = "", telemetryText = "") {
     document.getElementById('hudScore').innerText = this.getScoreStr();
     const isMyServe = (this.role === 'GUEST') ? (this.server === 1) : (this.server === 0);
     document.getElementById('hudServer').innerText = isMyServe ? "YOUR SERVE" : "RECEIVING";
-    if (txt) document.getElementById('hudFeedback').innerText = txt;
+    if (mainText) document.getElementById('hudFeedbackMain').innerText = mainText;
+    if (telemetryText) document.getElementById('hudTelemetry').innerText = telemetryText;
   }
 
   speak(text, cb) {
@@ -561,17 +544,19 @@ class TennisMatchController {
   nextPoint() {
     clearTimeout(this.timeout);
     this.awaitingHit = false;
-    this.updateHUD("READY");
+    this.motion.setExpectedDirection(null);
+    this.updateHUD("READY", "");
 
     setTimeout(() => {
       const isMyServe = (this.role === 'GUEST') ? (this.server === 1) : (this.server === 0);
 
       if (isMyServe) {
-        this.updateHUD("SWING TO SERVE");
+        this.updateHUD("SWING TO SERVE", "FOREHAND OR BACKHAND");
         this.direction = Math.random() > 0.5 ? 1 : -1;
         this.flightTime = 1.6;
         this.ballStartTime = performance.now();
         this.awaitingHit = true;
+        this.motion.setExpectedDirection(this.direction);
         this.audio.playBallApproach(this.direction, this.flightTime);
 
         this.timeout = setTimeout(() => {
@@ -579,7 +564,7 @@ class TennisMatchController {
         }, (this.flightTime + this.hitMargin) * 1000);
 
       } else {
-        this.updateHUD("READY TO RECEIVE");
+        this.updateHUD("READY TO RECEIVE", "");
         if (this.role === 'WALL') {
           setTimeout(() => {
             this.receiveBall(Math.random() > 0.5 ? 1 : -1, 1.35);
@@ -598,15 +583,21 @@ class TennisMatchController {
     this.ballStartTime = performance.now();
     this.awaitingHit = true;
 
+    // Notify motion engine so it lowers the threshold for Left side arrivals
+    this.motion.setExpectedDirection(dir);
+
     this.audio.playBallApproach(dir, dur);
-    this.updateHUD(dir === 1 ? "FOREHAND (RIGHT)" : "BACKHAND (LEFT)");
+    this.updateHUD(
+      dir === 1 ? "FOREHAND (RIGHT)" : "BACKHAND (LEFT)",
+      dir === 1 ? "SCREEN FORWARD" : "BACK PANEL FORWARD"
+    );
 
     this.timeout = setTimeout(() => {
-      if (this.awaitingHit) this.handleMiss("MISSED BALL");
+      if (this.awaitingHit) this.handleMiss("MISSED BALL (TIMED OUT)");
     }, (dur + this.hitMargin) * 1000);
   }
 
-  onSwing(face) {
+  onSwing(face, forceVal) {
     if (!this.awaitingHit) {
       this.audio.playWhiff();
       return;
@@ -616,21 +607,28 @@ class TennisMatchController {
     clearTimeout(this.timeout);
     this.awaitingHit = false;
 
+    // Early Swing Check
     if (elapsed < (this.flightTime - this.hitMargin)) {
       this.audio.playWhiff();
-      this.handleMiss("TOO EARLY");
+      this.handleMiss("TOO EARLY", `SWUNG AT ${(elapsed).toFixed(2)}s (NEED ~${this.flightTime}s)`);
       return;
     }
 
+    // PlayStation Move Biomechanics Verification:
+    // Right = Screen forward. Left = Back panel forward.
     const targetFace = (this.direction === 1) ? 'SCREEN' : 'BACK_PANEL';
     if (face !== targetFace) {
       this.audio.playWhiff();
-      this.handleMiss(this.direction === 1 ? "WRONG SIDE (NEED SCREEN)" : "WRONG SIDE (NEED BACK)");
+      const reason = (this.direction === 1)
+        ? "WRONG SIDE (NEED SCREEN FORWARD)"
+        : "WRONG SIDE (NEED BACK PANEL FORWARD)";
+      this.handleMiss(reason, `DETECTED: ${face}`);
       return;
     }
 
+    // Clean Hit Confirmed
     this.audio.playHit();
-    this.updateHUD("CLEAN HIT!");
+    this.updateHUD("CLEAN HIT!", `FORCE: ${forceVal.toFixed(1)} m/s² [${face}]`);
 
     if (this.role === 'WALL') {
       setTimeout(() => this.audio.playBounce(), 450);
@@ -646,11 +644,11 @@ class TennisMatchController {
     }
   }
 
-  handleMiss(reason) {
+  handleMiss(reason, telemetry = "") {
     this.awaitingHit = false;
     clearTimeout(this.timeout);
     this.audio.playBounce();
-    this.updateHUD(reason);
+    this.updateHUD(reason, telemetry);
 
     if (this.role === 'WALL') {
       this.awardPoint(1);
@@ -700,15 +698,15 @@ class TennisMatchController {
 }
 
 /**
- * 4. BOOTSTRAP & MATCHMAKING
+ * 4. BOOTSTRAP & INITIALIZATION
  */
 const audio = new AudioEngine();
 let match = null;
 let peer = null;
 let conn = null;
 
-const motion = new MotionEngine((face) => {
-  if (match) match.onSwing(face);
+const motion = new DirectionAwareMotionEngine((face, force) => {
+  if (match) match.onSwing(face, force);
 });
 
 document.getElementById('btnAudioTest').addEventListener('click', () => {
@@ -735,17 +733,19 @@ function launchGame(title) {
   }
 }
 
+// 1. Solo Wall Mode
 document.getElementById('btnWall').addEventListener('click', async () => {
   const ok = await motion.requestPermission();
   if (!ok) {
-    alert("Motion sensor access is strictly required to play.");
+    alert("Motion sensor access is strictly required.");
     return;
   }
   launchGame("SOLO WALL PRACTICE");
-  match = new TennisMatchController(audio, 'WALL', null);
+  match = new TennisMatchController(audio, 'WALL', null, motion);
   match.start();
 });
 
+// 2. Host Room
 document.getElementById('btnCreate').addEventListener('click', async () => {
   const ok = await motion.requestPermission();
   if (!ok) return;
@@ -759,7 +759,7 @@ document.getElementById('btnCreate').addEventListener('click', async () => {
     conn = c;
     const onOpen = () => {
       launchGame("1v1 ARENA (HOST)");
-      match = new TennisMatchController(audio, 'HOST', (pkt) => conn.send(pkt));
+      match = new TennisMatchController(audio, 'HOST', (pkt) => conn.send(pkt), motion);
 
       conn.on('data', (d) => {
         if (d.type === 'BALL') match.receiveBall(d.direction, d.duration);
@@ -776,10 +776,11 @@ document.getElementById('btnCreate').addEventListener('click', async () => {
   peer.on('error', (e) => alert("P2P Signaling Error: " + e.type));
 });
 
+// 3. Join Room
 document.getElementById('btnJoin').addEventListener('click', async () => {
   const code = document.getElementById('roomInput').value.trim().toUpperCase();
   if (code.length < 4) {
-    alert("Please enter a valid room code.");
+    alert("Enter valid room code.");
     return;
   }
   const ok = await motion.requestPermission();
@@ -791,7 +792,7 @@ document.getElementById('btnJoin').addEventListener('click', async () => {
     conn = peer.connect('aerotennis-' + code, { reliable: true });
     const onOpen = () => {
       launchGame("1v1 ARENA (GUEST)");
-      match = new TennisMatchController(audio, 'GUEST', (pkt) => conn.send(pkt));
+      match = new TennisMatchController(audio, 'GUEST', (pkt) => conn.send(pkt), motion);
 
       conn.on('data', (d) => {
         if (d.type === 'BALL') match.receiveBall(d.direction, d.duration);
@@ -811,7 +812,7 @@ document.getElementById('btnJoin').addEventListener('click', async () => {
     else conn.on('open', onOpen);
   });
 
-  peer.on('error', () => alert("Could not find or connect to room code."));
+  peer.on('error', () => alert("Could not find room code."));
 });
 
 document.getElementById('btnQuit').addEventListener('click', () => window.location.reload());

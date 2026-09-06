@@ -2,24 +2,24 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0, viewport-fit=cover" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <title>AeroTennis | Audio-Motion Cyber Tennis</title>
+  <title>AeroTennis | Precision Audio-Motion Cyber Tennis</title>
 
-  <!-- PeerJS for WebRTC Zero-Lag P2P Matchmaking -->
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 
   <style>
     :root {
-      --bg: #07090e;
-      --panel: #0d121d;
-      --neon-cyan: #00f3ff;
-      --neon-green: #39ff14;
-      --neon-magenta: #ff0055;
-      --text-dim: #798ba3;
-      --border: #1a2538;
-      --font-cyber: 'Courier New', Courier, monospace;
+      --bg: #03060a;
+      --panel: #080f18;
+      --cyan: #00f3ff;
+      --green: #39ff14;
+      --red: #ff0055;
+      --yellow: #ffd700;
+      --dim: #5c7088;
+      --border: #122033;
+      --font: 'Courier New', Courier, monospace;
     }
 
     * {
@@ -28,149 +28,138 @@
       padding: 0;
       user-select: none;
       -webkit-user-select: none;
-      touch-action: manipulation;
+      touch-action: none;
     }
 
     body {
       background-color: var(--bg);
       color: #fff;
-      font-family: var(--font-cyber);
-      overflow: hidden;
+      font-family: var(--font);
       height: 100vh;
       width: 100vw;
+      overflow: hidden;
       display: flex;
-      flex-direction: column;
       justify-content: center;
       align-items: center;
-      text-align: center;
-    }
-
-    /* Subtle Cyberpunk Matrix Background Grid */
-    body::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background-image: 
-        linear-gradient(rgba(0, 243, 255, 0.05) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0, 243, 255, 0.05) 1px, transparent 1px);
-      background-size: 30px 30px;
-      z-index: 0;
-      pointer-events: none;
     }
 
     .container {
-      position: relative;
-      z-index: 1;
-      width: 90%;
-      max-width: 480px;
+      width: 92%;
+      max-width: 440px;
       background: var(--panel);
       border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 24px 20px;
-      box-shadow: 0 0 25px rgba(0, 243, 255, 0.15);
+      padding: 24px;
+      text-align: center;
+      box-shadow: 0 0 25px rgba(0, 243, 255, 0.1);
     }
 
     h1 {
-      font-size: 2.2rem;
-      letter-spacing: 4px;
-      color: var(--neon-cyan);
-      text-shadow: 0 0 10px rgba(0, 243, 255, 0.6);
-      margin-bottom: 6px;
-      text-transform: uppercase;
+      font-size: 2.1rem;
+      letter-spacing: 5px;
+      color: var(--cyan);
+      text-shadow: 0 0 12px rgba(0, 243, 255, 0.5);
+      margin-bottom: 4px;
     }
 
-    .subtitle {
-      font-size: 0.75rem;
-      color: var(--neon-green);
+    .sub {
+      font-size: 0.72rem;
+      color: var(--green);
       letter-spacing: 2px;
-      margin-bottom: 20px;
-      text-transform: uppercase;
+      margin-bottom: 14px;
     }
 
-    .status-box {
-      font-size: 0.9rem;
-      color: var(--text-dim);
-      margin-bottom: 20px;
+    .audio-test-box {
+      background: rgba(255, 215, 0, 0.06);
+      border: 1px solid var(--yellow);
+      border-radius: 6px;
+      padding: 10px;
+      margin-bottom: 14px;
+    }
+
+    .status-panel {
+      font-size: 0.82rem;
+      color: var(--dim);
+      border: 1px dashed var(--border);
+      padding: 10px;
+      border-radius: 6px;
+      margin-bottom: 12px;
       min-height: 48px;
       display: flex;
       align-items: center;
       justify-content: center;
-      border: 1px dashed var(--border);
-      padding: 8px 12px;
-      border-radius: 6px;
     }
 
     .btn {
+      width: 100%;
       background: transparent;
-      border: 1px solid var(--neon-cyan);
-      color: var(--neon-cyan);
+      border: 1px solid var(--cyan);
+      color: var(--cyan);
       font-family: inherit;
-      padding: 14px 20px;
-      font-size: 1rem;
+      padding: 13px;
+      font-size: 0.92rem;
       font-weight: bold;
-      text-transform: uppercase;
       letter-spacing: 2px;
       border-radius: 6px;
       cursor: pointer;
-      width: 100%;
-      margin: 8px 0;
-      transition: all 0.2s ease;
-      box-shadow: 0 0 10px rgba(0, 243, 255, 0.1);
+      margin: 5px 0;
     }
-
     .btn:active {
-      background: var(--neon-cyan);
+      background: var(--cyan);
       color: var(--bg);
-      box-shadow: 0 0 20px var(--neon-cyan);
     }
 
     .btn-green {
-      border-color: var(--neon-green);
-      color: var(--neon-green);
-      box-shadow: 0 0 10px rgba(57, 255, 20, 0.1);
+      border-color: var(--green);
+      color: var(--green);
     }
     .btn-green:active {
-      background: var(--neon-green);
+      background: var(--green);
       color: var(--bg);
-      box-shadow: 0 0 20px var(--neon-green);
     }
 
-    .input-code {
+    .btn-yellow {
+      border-color: var(--yellow);
+      color: var(--yellow);
+      font-size: 0.75rem;
+      padding: 8px;
+    }
+    .btn-yellow:active {
+      background: var(--yellow);
+      color: #000;
+    }
+
+    .code-input {
       width: 100%;
-      padding: 12px;
+      padding: 11px;
       background: rgba(0,0,0,0.5);
       border: 1px solid var(--border);
-      color: var(--neon-green);
-      font-size: 1.2rem;
+      color: var(--green);
+      font-size: 1.15rem;
       font-family: inherit;
       text-align: center;
       letter-spacing: 4px;
       border-radius: 6px;
-      margin: 8px 0;
+      margin: 6px 0;
       text-transform: uppercase;
       outline: none;
     }
-    .input-code:focus {
-      border-color: var(--neon-cyan);
-    }
+    .code-input:focus { border-color: var(--cyan); }
 
-    /* Racket Grip Visual Guide */
-    .grip-guide {
-      font-size: 0.75rem;
+    .grip-card {
+      font-size: 0.70rem;
       color: #8fa0b5;
-      line-height: 1.5;
       text-align: left;
+      line-height: 1.45;
       background: rgba(0,0,0,0.4);
-      padding: 12px;
-      border-left: 3px solid var(--neon-cyan);
+      border-left: 3px solid var(--cyan);
+      padding: 10px 12px;
       border-radius: 4px;
-      margin-top: 15px;
+      margin-top: 12px;
     }
-    .grip-guide b {
-      color: #fff;
-    }
+    .grip-card b { color: #fff; }
 
-    /* In-Game HUD: Completely Black Screen during rally to focus on Audio */
+    /* HUD */
     #hud {
       display: none;
       position: fixed;
@@ -180,51 +169,50 @@
       flex-direction: column;
       justify-content: space-between;
       align-items: center;
-      padding: 40px 20px;
+      padding: 46px 20px;
+      text-align: center;
+    }
+
+    .hud-header {
+      font-size: 0.85rem;
+      letter-spacing: 3px;
+      color: var(--dim);
     }
 
     .hud-score {
-      font-size: 2.2rem;
+      font-size: 2.8rem;
       letter-spacing: 6px;
-      color: var(--neon-cyan);
-      text-shadow: 0 0 15px var(--neon-cyan);
+      color: var(--cyan);
+      text-shadow: 0 0 20px var(--cyan);
+      margin: 10px 0;
     }
 
-    .hud-sub {
+    .hud-turn {
       font-size: 1rem;
-      color: var(--neon-green);
+      color: var(--green);
       letter-spacing: 2px;
-      margin-top: 6px;
     }
 
     .hud-feedback {
-      font-size: 1.6rem;
+      font-size: 1.5rem;
       letter-spacing: 3px;
       color: #fff;
+      min-height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       text-transform: uppercase;
-      min-height: 40px;
     }
 
     .hud-quit {
-      border: 1px solid var(--neon-magenta);
-      color: var(--neon-magenta);
+      border: 1px solid var(--red);
+      color: var(--red);
       background: transparent;
-      padding: 8px 18px;
+      padding: 10px 24px;
       font-family: inherit;
-      font-size: 0.8rem;
+      font-size: 0.85rem;
       border-radius: 4px;
       cursor: pointer;
-    }
-
-    .warning-modal {
-      display: none;
-      background: rgba(255, 0, 85, 0.15);
-      border: 1px solid var(--neon-magenta);
-      color: #fff;
-      padding: 12px;
-      font-size: 0.8rem;
-      border-radius: 6px;
-      margin-bottom: 12px;
     }
   </style>
 </head>
@@ -232,698 +220,601 @@
 
   <div class="container" id="lobby">
     <h1>AEROTENNIS</h1>
-    <div class="subtitle">Spatial Audio Motion Tennis</div>
+    <div class="sub">Kinematic Audio Motion Tennis</div>
 
-    <div class="warning-modal" id="audioWarn">
-      🎧 <b>STEREO HEADPHONES STRICTLY REQUIRED</b><br/>
-      Audio cues define left/right ball approaches. Unplugged or mono audio will cause missed shots.
+    <div class="audio-test-box">
+      <div style="font-size:0.75rem; color:var(--yellow); margin-bottom:6px;">
+        🎧 <b>STEREO EARPHONES MANDATORY</b>
+      </div>
+      <button class="btn btn-yellow" id="btnAudioTest">Test Left/Right Audio</button>
     </div>
 
-    <div class="status-box" id="statusText">System Ready. Check Headphones.</div>
+    <div class="status-panel" id="statusText">Hold Phone in Right Hand & Select Mode</div>
 
-    <div id="lobbyControls">
-      <button class="btn btn-green" id="btnWall">Solo Wall Practice</button>
-      <button class="btn" id="btnCreate">Create Online Match</button>
-      <input type="text" id="roomInput" class="input-code" placeholder="ENTER 6-DIGIT CODE" maxlength="6" />
-      <button class="btn" id="btnJoin">Join Online Match</button>
-    </div>
+    <button class="btn btn-green" id="btnWall">Solo Wall Practice</button>
+    <button class="btn" id="btnCreate">Create 2-Player Match</button>
+    <input type="text" id="roomInput" class="code-input" placeholder="ROOM CODE" maxlength="6" />
+    <button class="btn" id="btnJoin">Join Match</button>
 
-    <div class="grip-guide">
-      <b>PLAYSTATION MOVE GRIP:</b><br/>
-      Hold phone horizontally (Landscape) in right hand like a racket handle.<br/>
-      • <b>Right Ear Audio (Forehand):</b> Swing forward with <u>Screen</u> striking forward.<br/>
-      • <b>Left Ear Audio (Backhand):</b> Bring arm across chest, wrist turns so <u>Back Panel</u> strikes forward.
+    <div class="grip-card">
+      <b>PLAYSTATION MOVE GRIP (RIGHT HAND):</b><br/>
+      Hold phone horizontally (Charging port points toward your wrist).<br/>
+      • <b>Right Ear (Forehand):</b> Swing right to left. <b>Screen</b> strikes forward.<br/>
+      • <b>Left Ear (Backhand):</b> Cross arm over chest. Wrist turns so <b>Back Panel</b> strikes forward.
     </div>
   </div>
 
-  <!-- IN-GAME HUD -->
+  <!-- HUD -->
   <div id="hud">
     <div>
-      <div class="hud-score" id="scoreDisplay">0 - 0</div>
-      <div class="hud-sub" id="serverDisplay">WALL MODE</div>
+      <div class="hud-header" id="hudMode">ARENA</div>
+      <div class="hud-score" id="hudScore">0 - 0</div>
+      <div class="hud-turn" id="hudServer">INITIALIZING</div>
     </div>
-    <div class="hud-feedback" id="feedbackDisplay">READY</div>
-    <button class="hud-quit" id="btnQuit">FORFEIT / EXIT</button>
+    <div class="hud-feedback" id="hudFeedback">HOLD READY</div>
+    <button class="hud-quit" id="btnQuit">EXIT MATCH</button>
   </div>
 
 <script>
 /**
- * AEROTENNIS CORE ENGINE
- * Implements procedural spatial acoustics, swing physics, tennis scoring, and WebRTC networking.
+ * 1. HIGH-PRECISION AUDIO SYNTHESIZER
  */
-
-// --- 1. AUDIO ENGINE (Procedural Realistic Sound Design) ---
-class TennisAudioEngine {
+class AudioEngine {
   constructor() {
     this.ctx = null;
-    this.masterGain = null;
   }
 
   init() {
-    if (this.ctx) return;
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    this.ctx = new AudioContext();
-    this.masterGain = this.ctx.createGain();
-    this.masterGain.gain.setValueAtTime(0.85, this.ctx.currentTime);
-    this.masterGain.connect(this.ctx.destination);
+    if (!this.ctx) {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      this.ctx = new AudioCtx();
+    }
+    if (this.ctx.state === 'suspended') {
+      this.ctx.resume();
+    }
   }
 
-  // Realistic synthesized tennis ball approaching through air (Doppler noise + tonal hum)
-  playApproachingBall(panVal, flightDuration) {
+  playTestTone(dir, freq, onDone) {
+    this.init();
+    const t0 = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    const panner = this.ctx.createStereoPanner();
+
+    osc.frequency.setValueAtTime(freq, t0);
+    panner.pan.setValueAtTime(dir, t0);
+    gain.gain.setValueAtTime(0.3, t0);
+    gain.gain.exponentialRampToValueAtTime(0.001, t0 + 0.35);
+
+    osc.connect(gain);
+    gain.connect(panner);
+    panner.connect(this.ctx.destination);
+
+    osc.start(t0);
+    osc.stop(t0 + 0.36);
+    setTimeout(onDone, 400);
+  }
+
+  playBallApproach(direction, duration) {
     if (!this.ctx) return;
     const t0 = this.ctx.currentTime;
-    const tEnd = t0 + flightDuration;
+    const tEnd = t0 + duration;
 
-    // Buffer noise for fuzz air friction
-    const bufferSize = this.ctx.sampleRate * flightDuration;
+    const bufferSize = Math.floor(this.ctx.sampleRate * duration);
     const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
     const data = buffer.getChannelData(0);
     for (let i = 0; i < bufferSize; i++) {
       data[i] = Math.random() * 2 - 1;
     }
 
-    const noiseSource = this.ctx.createBufferSource();
-    noiseSource.buffer = buffer;
+    const noise = this.ctx.createBufferSource();
+    noise.buffer = buffer;
 
-    // Resonant bandpass filter: simulates aerodynamic whistling of the seam
-    const bandpass = this.ctx.createBiquadFilter();
-    bandpass.type = 'bandpass';
-    bandpass.frequency.setValueAtTime(450, t0);
-    bandpass.frequency.exponentialRampToValueAtTime(850, tEnd); // Doppler pitch up
-    bandpass.Q.setValueAtTime(3.5, t0);
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(360, t0);
+    filter.frequency.exponentialRampToValueAtTime(960, tEnd);
+    filter.Q.setValueAtTime(3.8, t0);
 
-    // Ball approaching volume curve: starts soft, exponential swell to maximum hit-point
-    const envelope = this.ctx.createGain();
-    envelope.gain.setValueAtTime(0.01, t0);
-    envelope.gain.exponentialRampToValueAtTime(1.0, tEnd);
+    const gain = this.ctx.createGain();
+    gain.gain.setValueAtTime(0.01, t0);
+    gain.gain.exponentialRampToValueAtTime(1.0, tEnd);
 
-    // Spatial Stereo Panner: Left (-1) or Right (+1)
     const panner = this.ctx.createStereoPanner();
-    panner.pan.setValueAtTime(panVal, t0);
+    panner.pan.setValueAtTime(direction, t0);
 
-    noiseSource.connect(bandpass);
-    bandpass.connect(envelope);
-    envelope.connect(panner);
-    panner.connect(this.masterGain);
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(panner);
+    panner.connect(this.ctx.destination);
 
-    noiseSource.start(t0);
-    noiseSource.stop(tEnd + 0.05);
+    noise.start(t0);
+    noise.stop(tEnd + 0.05);
   }
 
-  // Crisp Racket Gut String Impact Sound
-  playRacketHit(speed = 1.0) {
+  playHit() {
     if (!this.ctx) return;
     const t0 = this.ctx.currentTime;
-
-    // 1. String bed ping (Sine oscillation with high dampening)
     const osc = this.ctx.createOscillator();
-    const oscGain = this.ctx.createGain();
+    const g = this.ctx.createGain();
     osc.type = 'triangle';
-    osc.frequency.setValueAtTime(620 * speed, t0);
-    osc.frequency.exponentialRampToValueAtTime(120, t0 + 0.08);
-
-    oscGain.gain.setValueAtTime(1.0, t0);
-    oscGain.gain.exponentialRampToValueAtTime(0.001, t0 + 0.08);
-
-    osc.connect(oscGain);
-    oscGain.connect(this.masterGain);
+    osc.frequency.setValueAtTime(660, t0);
+    osc.frequency.exponentialRampToValueAtTime(130, t0 + 0.08);
+    g.gain.setValueAtTime(1.0, t0);
+    g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.08);
+    osc.connect(g);
+    g.connect(this.ctx.destination);
     osc.start(t0);
     osc.stop(t0 + 0.09);
-
-    // 2. Solid racket frame pop (Impact noise burst)
-    const noiseBuffer = this.ctx.createBuffer(1, this.ctx.sampleRate * 0.04, this.ctx.sampleRate);
-    const output = noiseBuffer.getChannelData(0);
-    for (let i = 0; i < noiseBuffer.length; i++) {
-      output[i] = (Math.random() * 2 - 1) * Math.exp(-i / (this.ctx.sampleRate * 0.01));
-    }
-    const noise = this.ctx.createBufferSource();
-    noise.buffer = noiseBuffer;
-    noise.connect(this.masterGain);
-    noise.start(t0);
   }
 
-  // Miss / Whiff Sound (Racket cutting air empty)
   playWhiff() {
     if (!this.ctx) return;
     const t0 = this.ctx.currentTime;
     const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
+    const g = this.ctx.createGain();
     osc.type = 'sine';
     osc.frequency.setValueAtTime(280, t0);
-    osc.frequency.exponentialRampToValueAtTime(80, t0 + 0.18);
-    gain.gain.setValueAtTime(0.4, t0);
-    gain.gain.exponentialRampToValueAtTime(0.001, t0 + 0.18);
-    osc.connect(gain);
-    gain.connect(this.masterGain);
+    osc.frequency.exponentialRampToValueAtTime(70, t0 + 0.16);
+    g.gain.setValueAtTime(0.35, t0);
+    g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.16);
+    osc.connect(g);
+    g.connect(this.ctx.destination);
     osc.start(t0);
-    osc.stop(t0 + 0.2);
+    osc.stop(t0 + 0.17);
   }
 
-  // Ball bouncing on opposing court baseline
   playBounce() {
     if (!this.ctx) return;
     const t0 = this.ctx.currentTime;
     const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
-    osc.frequency.setValueAtTime(180, t0);
-    osc.frequency.exponentialRampToValueAtTime(50, t0 + 0.12);
-    gain.gain.setValueAtTime(0.7, t0);
-    gain.gain.exponentialRampToValueAtTime(0.001, t0 + 0.12);
-    osc.connect(gain);
-    gain.connect(this.masterGain);
+    const g = this.ctx.createGain();
+    osc.frequency.setValueAtTime(160, t0);
+    osc.frequency.exponentialRampToValueAtTime(40, t0 + 0.12);
+    g.gain.setValueAtTime(0.6, t0);
+    g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.12);
+    osc.connect(g);
+    g.connect(this.ctx.destination);
     osc.start(t0);
     osc.stop(t0 + 0.13);
   }
 }
 
-// --- 2. UMPIRE SPEECH SYNTHESIS ---
-class TennisUmpire {
-  constructor() {
-    this.synth = window.speechSynthesis;
-  }
+/**
+ * 2. DUAL-STAGE KINEMATIC MOTION ENGINE
+ * Combines impulse integration with orientation attitude checking.
+ */
+class MotionEngine {
+  constructor(onSwing) {
+    this.onSwing = onSwing;
+    this.active = false;
+    this.lockoutUntil = 0;
 
-  speak(text, onComplete = null) {
-    if (!this.synth) {
-      if (onComplete) setTimeout(onComplete, 1200);
-      return;
-    }
-    this.synth.cancel(); // Abort previous to prevent overlap
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 1.05;
-    utterance.pitch = 0.95;
-    utterance.onend = () => {
-      if (onComplete) onComplete();
-    };
-    utterance.onerror = () => {
-      if (onComplete) onComplete();
-    };
-    this.synth.speak(utterance);
-  }
-}
+    // Running Gravity Estimation
+    this.filteredZ = 0;
+    this.alpha = 0.86;
 
-// --- 3. HARDWARE MOTION PROCESSOR (PlayStation Move Grip Model) ---
-class MotionProcessor {
-  constructor(onValidSwing) {
-    this.onValidSwing = onValidSwing;
-    this.isActive = false;
-    this.lastSwingTime = 0;
-    this.swingCooldown = 650; // ms
+    // Stroke Integration
+    this.isTracking = false;
+    this.strokeStart = 0;
+    this.integratedZ = 0;
 
-    // Accelerometer thresholds
-    this.SWING_ACCEL_THRESHOLD = 13.0; // m/s^2 forward strike impulse
+    // Attitude Tracking (DeviceOrientation)
+    this.gamma = 0; // Left-to-right tilt (-90 to +90)
 
-    this.handleDeviceMotion = this.handleDeviceMotion.bind(this);
+    this.onMotion = this.onMotion.bind(this);
+    this.onOrientation = this.onOrientation.bind(this);
   }
 
   async requestPermission() {
+    let granted = true;
     if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
       try {
-        const response = await DeviceMotionEvent.requestPermission();
-        return response === 'granted';
-      } catch (err) {
-        console.warn('Motion permission err:', err);
-        return false;
+        const res = await DeviceMotionEvent.requestPermission();
+        granted = (res === 'granted');
+      } catch (e) {
+        granted = false;
       }
     }
-    return true; // Non-iOS or older Android
+    if (granted && typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+      try {
+        await DeviceOrientationEvent.requestPermission();
+      } catch (e) {}
+    }
+    return granted;
   }
 
   start() {
-    this.isActive = true;
-    window.addEventListener('devicemotion', this.handleDeviceMotion, false);
+    this.active = true;
+    this.filteredZ = 0;
+    this.isTracking = false;
+    window.addEventListener('devicemotion', this.onMotion, false);
+    window.addEventListener('deviceorientation', this.onOrientation, false);
   }
 
   stop() {
-    this.isActive = false;
-    window.removeEventListener('devicemotion', this.handleDeviceMotion, false);
+    this.active = false;
+    window.removeEventListener('devicemotion', this.onMotion, false);
+    window.removeEventListener('deviceorientation', this.onOrientation, false);
   }
 
-  /**
-   * PlayStation Move Grip Coordinate Translation:
-   * Device held horizontally in right hand (landscape mode).
-   * 
-   * Local phone axes:
-   * Z-axis: perpendicular to the front screen (+Z points out of screen, -Z points out of back).
-   * 
-   * 1. Forehand Swing (Ball from Right):
-   *    Player swings forward naturally. Front screen pushes into the stroke path.
-   *    Acceleration: Strongly Positive Z (+Z thrust).
-   * 
-   * 2. Backhand Swing (Ball from Left):
-   *    Player reaches across chest. Wrist flips 180 degrees.
-   *    Phone screen now faces the player's chest/face, while back panel faces front.
-   *    Acceleration: When swinging forward, the Back panel pushes into the ball.
-   *    Acceleration: Strongly Negative Z (-Z thrust).
-   */
-  handleDeviceMotion(event) {
-    if (!this.isActive) return;
+  onOrientation(e) {
+    if (e.gamma !== null) {
+      this.gamma = e.gamma;
+    }
+  }
 
+  onMotion(e) {
+    if (!this.active) return;
     const now = performance.now();
-    if (now - this.lastSwingTime < this.swingCooldown) return;
+    if (now < this.lockoutUntil) return;
 
-    // Use linear acceleration (excluding gravity) if available; fallback to raw
-    const accel = event.acceleration && event.acceleration.z !== null 
-      ? event.acceleration 
-      : event.accelerationIncludingGravity;
+    let rawZ = 0;
+    if (e.acceleration && e.acceleration.z !== null && !isNaN(e.acceleration.z)) {
+      rawZ = e.acceleration.z;
+    } else if (e.accelerationIncludingGravity && e.accelerationIncludingGravity.z !== null) {
+      this.filteredZ = this.alpha * this.filteredZ + (1 - this.alpha) * e.accelerationIncludingGravity.z;
+      rawZ = e.accelerationIncludingGravity.z - this.filteredZ;
+    }
 
-    if (!accel || accel.z === null) return;
+    // 1. Strike Threshold Trigger
+    if (!this.isTracking) {
+      if (Math.abs(rawZ) >= 9.5) {
+        this.isTracking = true;
+        this.strokeStart = now;
+        this.integratedZ = 0;
+      }
+      return;
+    }
 
-    const az = accel.z;
+    // 2. Integrate Over 80ms
+    const duration = now - this.strokeStart;
+    this.integratedZ += rawZ * 0.016;
 
-    if (Math.abs(az) >= this.SWING_ACCEL_THRESHOLD) {
-      this.lastSwingTime = now;
-      const detectedFace = az > 0 ? 'SCREEN' : 'BACK_PANEL';
-      const strength = Math.min(Math.abs(az) / 25.0, 2.0); // Dynamic swing power
-      this.onValidSwing(detectedFace, strength);
+    if (duration >= 80) {
+      this.isTracking = false;
+
+      // Check impulse strength floor
+      if (Math.abs(this.integratedZ) >= 0.42) {
+        this.lockoutUntil = now + 620; // Ignore whiplash braking
+
+        // Attitude Validation:
+        // When holding the phone in landscape with the right hand:
+        // Forehand: Screen faces forward into the swing path (integratedZ > 0)
+        // Backhand: Wrist flips across chest, screen faces player (integratedZ < 0)
+        let face = this.integratedZ > 0 ? 'SCREEN' : 'BACK_PANEL';
+
+        // Orientation sanity check: If gamma indicates the phone was rolled over > 45 deg,
+        // it strongly confirms a wrist-flipped backhand posture.
+        if (this.gamma > 45 && this.integratedZ < 0) {
+          face = 'BACK_PANEL';
+        }
+
+        this.onSwing(face);
+      }
     }
   }
 }
 
-// --- 4. TENNIS RULES & GAME STATE CONTROLLER ---
-class TennisMatch {
-  constructor(audio, umpire, isMultiplayer = false, sendNetworkPacket = null) {
+/**
+ * 3. AUTHORITATIVE TENNIS CONTROLLER
+ */
+class TennisMatchController {
+  constructor(audio, role, sendPacket) {
     this.audio = audio;
-    this.umpire = umpire;
-    this.isMultiplayer = isMultiplayer;
-    this.sendNetworkPacket = sendNetworkPacket;
+    this.role = role;
+    this.sendPacket = sendPacket;
 
-    // Points translation
-    this.scorePoints = [0, 0]; // [P1, P2]
-    this.gamesWon = [0, 0];
+    this.points = [0, 0];
+    this.games = [0, 0];
+    this.server = 0;
 
-    this.serverIdx = 0; // 0 = P1 (Local), 1 = P2 (Opponent / Wall)
-    this.currentBallDirection = null; // -1: Left (Backhand), 1: Right (Forehand)
-    this.ballFlightDuration = 1.35; // seconds
+    this.awaitingHit = false;
+    this.direction = null;
+    this.flightTime = 1.35;
     this.ballStartTime = 0;
-    this.hitWindowMargin = 0.38; // Sweet spot window: +/- 380ms around peak loudness
-
-    this.ballInPlay = false;
-    this.awaitingPlayerHit = false;
-    this.ballTimer = null;
-    this.isWallMode = !isMultiplayer;
+    this.hitMargin = 0.45;
+    this.timeout = null;
   }
 
-  getScoreString() {
-    const p1 = this.scorePoints[0];
-    const p2 = this.scorePoints[1];
-
+  getScoreStr() {
+    const p1 = this.points[0];
+    const p2 = this.points[1];
     if (p1 >= 3 && p2 >= 3) {
       if (p1 === p2) return "Deuce";
-      if (p1 === p2 + 1) return "Advantage Player 1";
-      if (p2 === p1 + 1) return "Advantage Player 2";
+      if (p1 === p2 + 1) return "Advantage P1";
+      if (p2 === p1 + 1) return "Advantage P2";
     }
-
     const terms = ["Love", "15", "30", "40"];
     return `${terms[p1] || "40"} - ${terms[p2] || "40"}`;
   }
 
-  updateHUD(feedback = "") {
-    const scoreText = this.getScoreString();
-    document.getElementById('scoreDisplay').innerText = scoreText;
-    document.getElementById('serverDisplay').innerText = 
-      this.isWallMode ? "WALL PRACTICE MODE" : (this.serverIdx === 0 ? "YOUR SERVE" : "OPPONENT SERVE");
-    if (feedback) {
-      const fbEl = document.getElementById('feedbackDisplay');
-      fbEl.innerText = feedback;
+  updateHUD(txt = "") {
+    document.getElementById('hudScore').innerText = this.getScoreStr();
+    const isMyServe = (this.role === 'GUEST') ? (this.server === 1) : (this.server === 0);
+    document.getElementById('hudServer').innerText = isMyServe ? "YOUR SERVE" : "RECEIVING";
+    if (txt) document.getElementById('hudFeedback').innerText = txt;
+  }
+
+  speak(text, cb) {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      let done = false;
+      const wrap = () => { if (!done) { done = true; if (cb) cb(); } };
+      u.onend = wrap;
+      u.onerror = wrap;
+      setTimeout(wrap, 2000);
+      window.speechSynthesis.speak(u);
+    } else {
+      if (cb) setTimeout(cb, 1000);
     }
   }
 
-  startMatch() {
-    this.scorePoints = [0, 0];
-    this.gamesWon = [0, 0];
-    this.serverIdx = 0;
-    this.updateHUD("GET READY");
-
-    this.umpire.speak("Match started. " + (this.serverIdx === 0 ? "You are serving." : "Opponent serving."), () => {
-      this.prepareServe();
+  start() {
+    this.updateHUD("MATCH COMMENCING");
+    this.speak("Match commenced. " + (this.server === 0 ? "You serve." : "Opponent serves."), () => {
+      this.nextPoint();
     });
   }
 
-  prepareServe() {
-    this.ballInPlay = false;
-    this.awaitingPlayerHit = false;
-    this.updateHUD("SERVE STAGE");
+  nextPoint() {
+    clearTimeout(this.timeout);
+    this.awaitingHit = false;
+    this.updateHUD("READY");
 
     setTimeout(() => {
-      if (this.serverIdx === 0) {
-        // Player 1 serves: simulate quick toss and auto serve towards other side
-        this.umpire.speak(this.getScoreString() + ". Swing to serve.", () => {
-          this.awaitingPlayerHit = true;
-          this.currentBallDirection = Math.random() > 0.5 ? 1 : -1;
-          // Cue soft ready tone
-          this.audio.playApproachingBall(this.currentBallDirection, 1.8);
-          this.ballStartTime = performance.now();
-          this.ballFlightDuration = 1.8;
-          this.watchForMiss();
-        });
+      const isMyServe = (this.role === 'GUEST') ? (this.server === 1) : (this.server === 0);
+
+      if (isMyServe) {
+        this.updateHUD("SWING TO SERVE");
+        this.direction = Math.random() > 0.5 ? 1 : -1;
+        this.flightTime = 1.6;
+        this.ballStartTime = performance.now();
+        this.awaitingHit = true;
+        this.audio.playBallApproach(this.direction, this.flightTime);
+
+        this.timeout = setTimeout(() => {
+          if (this.awaitingHit) this.handleMiss("FAULT - MISSED SERVE");
+        }, (this.flightTime + this.hitMargin) * 1000);
+
       } else {
-        // Wall or opponent serves
-        this.umpire.speak(this.getScoreString() + ". Receiver ready.", () => {
+        this.updateHUD("READY TO RECEIVE");
+        if (this.role === 'WALL') {
           setTimeout(() => {
-            this.triggerIncomingBall();
+            this.receiveBall(Math.random() > 0.5 ? 1 : -1, 1.35);
           }, 1000);
-        });
+        } else if (this.role === 'HOST') {
+          this.sendPacket({ type: 'CMD_SERVE' });
+        }
       }
     }, 1200);
   }
 
-  // Launches an incoming ball approaching the local player
-  triggerIncomingBall(direction = null, duration = 1.35) {
-    if (!this.ballInPlay && this.serverIdx === 1) this.ballInPlay = true;
-
-    // Randomize Left vs Right trajectory if not dictated by network
-    this.currentBallDirection = direction !== null ? direction : (Math.random() > 0.5 ? 1 : -1);
-    this.ballFlightDuration = duration;
+  receiveBall(dir, dur) {
+    clearTimeout(this.timeout);
+    this.direction = dir;
+    this.flightTime = dur;
     this.ballStartTime = performance.now();
-    this.awaitingPlayerHit = true;
+    this.awaitingHit = true;
 
-    // Trigger 3D directional audio: Pan -1 (dominantly Left) or +1 (dominantly Right)
-    this.audio.playApproachingBall(this.currentBallDirection, this.ballFlightDuration);
+    this.audio.playBallApproach(dir, dur);
+    this.updateHUD(dir === 1 ? "FOREHAND (RIGHT)" : "BACKHAND (LEFT)");
 
-    this.watchForMiss();
+    this.timeout = setTimeout(() => {
+      if (this.awaitingHit) this.handleMiss("MISSED BALL");
+    }, (dur + this.hitMargin) * 1000);
   }
 
-  watchForMiss() {
-    clearTimeout(this.ballTimer);
-    const timeUntilMiss = (this.ballFlightDuration + this.hitWindowMargin) * 1000;
-
-    this.ballTimer = setTimeout(() => {
-      if (this.awaitingPlayerHit) {
-        this.registerMiss("LATE - MISSED BALL");
-      }
-    }, timeUntilMiss);
-  }
-
-  // Evaluates player's physical swing against audio position & timing
-  onPlayerSwing(detectedFace, strength) {
-    if (!this.awaitingPlayerHit) {
-      // Swung randomly when no ball was approaching
+  onSwing(face) {
+    if (!this.awaitingHit) {
       this.audio.playWhiff();
       return;
     }
 
-    const now = performance.now();
-    const elapsedTimeSec = (now - this.ballStartTime) / 1000;
-    const timingDiff = Math.abs(elapsedTimeSec - this.ballFlightDuration);
+    const elapsed = (performance.now() - this.ballStartTime) / 1000;
+    clearTimeout(this.timeout);
+    this.awaitingHit = false;
 
-    clearTimeout(this.ballTimer);
-    this.awaitingPlayerHit = false;
-
-    // 1. TIMING CHECK
-    if (elapsedTimeSec < (this.ballFlightDuration - this.hitWindowMargin)) {
+    if (elapsed < (this.flightTime - this.hitMargin)) {
       this.audio.playWhiff();
-      this.registerMiss("TOO EARLY!");
+      this.handleMiss("TOO EARLY");
       return;
     }
 
-    // 2. BIOMECHANIC ORIENTATION CHECK (PlayStation Move Rules)
-    // Forehand (Ball Right): Requires Screen forward
-    // Backhand (Ball Left): Requires Back Panel forward
-    const expectedFace = (this.currentBallDirection === 1) ? 'SCREEN' : 'BACK_PANEL';
-
-    if (detectedFace !== expectedFace) {
+    const targetFace = (this.direction === 1) ? 'SCREEN' : 'BACK_PANEL';
+    if (face !== targetFace) {
       this.audio.playWhiff();
-      const errorDetail = (this.currentBallDirection === 1) 
-        ? "WRONG FACE! (Forehand needs SCREEN forward)" 
-        : "WRONG FACE! (Backhand needs BACK PANEL forward)";
-      this.registerMiss(errorDetail);
+      this.handleMiss(this.direction === 1 ? "WRONG SIDE (NEED SCREEN)" : "WRONG SIDE (NEED BACK)");
       return;
     }
 
-    // --- CLEAN HIT CONFIRMED ---
-    this.audio.playRacketHit(strength);
-    this.updateHUD("CLEAN RETURN!");
+    this.audio.playHit();
+    this.updateHUD("CLEAN HIT!");
 
-    if (this.isWallMode) {
-      // Wall Mode: AI returns after bounce
+    if (this.role === 'WALL') {
+      setTimeout(() => this.audio.playBounce(), 450);
       setTimeout(() => {
-        this.audio.playBounce();
-      }, 500);
-
-      setTimeout(() => {
-        // Returned by wall back to user at variable speeds
-        const nextDir = Math.random() > 0.5 ? 1 : -1;
-        const nextSpeed = 1.15 + (Math.random() * 0.4);
-        this.triggerIncomingBall(nextDir, nextSpeed);
-      }, 1000);
-
-    } else if (this.isMultiplayer && this.sendNetworkPacket) {
-      // Multiplayer: Send ball to remote peer
-      const returnDir = Math.random() > 0.5 ? 1 : -1;
-      this.sendNetworkPacket({
-        type: 'BALL_RETURN',
-        direction: returnDir,
+        this.receiveBall(Math.random() > 0.5 ? 1 : -1, 1.25);
+      }, 900);
+    } else {
+      this.sendPacket({
+        type: 'BALL',
+        direction: Math.random() > 0.5 ? 1 : -1,
         duration: 1.25
       });
     }
   }
 
-  registerMiss(reason) {
-    this.awaitingPlayerHit = false;
-    clearTimeout(this.ballTimer);
+  handleMiss(reason) {
+    this.awaitingHit = false;
+    clearTimeout(this.timeout);
+    this.audio.playBounce();
     this.updateHUD(reason);
 
-    // Ball bounces out / died
-    this.audio.playBounce();
-
-    // Invert point attribution: local missed => opponent wins point
-    const scoringPlayer = 1; 
-    this.awardPoint(scoringPlayer);
+    if (this.role === 'WALL') {
+      this.awardPoint(1);
+    } else if (this.role === 'HOST') {
+      this.awardPoint(1);
+    } else if (this.role === 'GUEST') {
+      this.sendPacket({ type: 'GUEST_MISS', reason });
+    }
   }
 
-  awardPoint(playerIndex) {
-    this.scorePoints[playerIndex]++;
-    const p1 = this.scorePoints[0];
-    const p2 = this.scorePoints[1];
+  awardPoint(winner) {
+    this.points[winner]++;
+    const p1 = this.points[0];
+    const p2 = this.points[1];
 
-    // Standard tennis game winning threshold
     let gameWon = false;
     if (p1 >= 4 && p1 >= p2 + 2) {
-      this.gamesWon[0]++;
+      this.games[0]++;
       gameWon = true;
     } else if (p2 >= 4 && p2 >= p1 + 2) {
-      this.gamesWon[1]++;
+      this.games[1]++;
       gameWon = true;
+    }
+
+    if (this.role === 'HOST') {
+      this.sendPacket({
+        type: 'SYNC',
+        points: this.points,
+        games: this.games,
+        server: this.server,
+        gameWon
+      });
     }
 
     if (gameWon) {
-      const winnerName = playerIndex === 0 ? "Player One" : "Player Two";
-      this.umpire.speak(`Game ${winnerName}. Score is ${this.gamesWon[0]} games to ${this.gamesWon[1]}.`, () => {
-        this.scorePoints = [0, 0];
-        this.serverIdx = (this.serverIdx === 0) ? 1 : 0; // Switch server each game
-        this.prepareServe();
-      });
+      this.points = [0, 0];
+      this.server = this.server === 0 ? 1 : 0;
+      const str = `Game won. Games: ${this.games[0]} to ${this.games[1]}.`;
+      this.updateHUD(str);
+      this.speak(str, () => this.nextPoint());
     } else {
-      this.umpire.speak(this.getScoreString(), () => {
-        this.prepareServe();
-      });
+      const s = this.getScoreStr();
+      this.updateHUD(s);
+      this.speak(s, () => this.nextPoint());
     }
   }
 }
 
-// --- 5. NETWORK & LOBBY MANAGER (PeerJS Zero-Lag P2P) ---
-class NetworkManager {
-  constructor(onRemoteBallReceived, onRemoteScoreSync) {
-    this.peer = null;
-    this.conn = null;
-    this.onRemoteBallReceived = onRemoteBallReceived;
-    this.onRemoteScoreSync = onRemoteScoreSync;
-  }
-
-  generateRoomCode() {
-    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-    let code = "";
-    for (let i = 0; i < 6; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
-    return code;
-  }
-
-  initHost(onReady) {
-    const code = this.generateRoomCode();
-    this.peer = new Peer('aerotennis-' + code);
-
-    this.peer.on('open', () => {
-      onReady(code);
-    });
-
-    this.peer.on('connection', (c) => {
-      this.conn = c;
-      this.setupConnectionHandlers();
-    });
-
-    this.peer.on('error', (err) => {
-      console.error('P2P Host error:', err);
-    });
-  }
-
-  joinRoom(code, onSuccess, onFail) {
-    this.peer = new Peer();
-    this.peer.on('open', () => {
-      const cleanCode = code.trim().toUpperCase();
-      this.conn = this.peer.connect('aerotennis-' + cleanCode, { reliable: true });
-      this.setupConnectionHandlers();
-      this.conn.on('open', onSuccess);
-    });
-
-    this.peer.on('error', (err) => {
-      console.error('P2P Join error:', err);
-      onFail(err);
-    });
-  }
-
-  setupConnectionHandlers() {
-    this.conn.on('data', (data) => {
-      if (data.type === 'BALL_RETURN') {
-        this.onRemoteBallReceived(data.direction, data.duration);
-      }
-    });
-
-    this.conn.on('close', () => {
-      alert("Opponent disconnected.");
-      window.location.reload();
-    });
-  }
-
-  send(packet) {
-    if (this.conn && this.conn.open) {
-      this.conn.send(packet);
-    }
-  }
-}
-
-// --- 6. INITIALIZATION & SCREEN WAKE LOCK ---
-const audio = new TennisAudioEngine();
-const umpire = new TennisUmpire();
+/**
+ * 4. BOOTSTRAP & MATCHMAKING
+ */
+const audio = new AudioEngine();
 let match = null;
-let network = null;
-let motionProcessor = null;
-let wakeLock = null;
+let peer = null;
+let conn = null;
 
-// Screen Wake Lock API to prevent screen locking during motion play
-async function keepScreenAwake() {
-  if ('wakeLock' in navigator) {
-    try {
-      wakeLock = await navigator.wakeLock.request('screen');
-    } catch (err) {
-      console.warn('Wake Lock error:', err);
-    }
-  }
-}
-
-// Check Earphone connection state
-function checkHeadphoneStatus() {
-  if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
-    navigator.mediaDevices.enumerateDevices().then(devices => {
-      const hasHeadphones = devices.some(d => 
-        d.kind === 'audiooutput' && 
-        (d.label.toLowerCase().includes('headphone') || 
-         d.label.toLowerCase().includes('headset') || 
-         d.label.toLowerCase().includes('earbuds') ||
-         d.label.toLowerCase().includes('bluetooth'))
-      );
-      if (!hasHeadphones) {
-        document.getElementById('audioWarn').style.display = 'block';
-      }
-    }).catch(() => {
-      document.getElementById('audioWarn').style.display = 'block';
-    });
-  }
-}
-checkHeadphoneStatus();
-
-// Swing dispatcher hooked to hardware accelerometer
-motionProcessor = new MotionProcessor((face, strength) => {
-  if (match) {
-    match.onPlayerSwing(face, strength);
-  }
+const motion = new MotionEngine((face) => {
+  if (match) match.onSwing(face);
 });
 
-// Setup Game HUD
-function activateHUD() {
+document.getElementById('btnAudioTest').addEventListener('click', () => {
+  const btn = document.getElementById('btnAudioTest');
+  btn.innerText = "Playing in LEFT ear...";
+  audio.playTestTone(-1, 400, () => {
+    btn.innerText = "Playing in RIGHT ear...";
+    audio.playTestTone(1, 800, () => {
+      btn.innerText = "Verified! (Tap to replay)";
+    });
+  });
+});
+
+function launchGame(title) {
   document.getElementById('lobby').style.display = 'none';
   document.getElementById('hud').style.display = 'flex';
-  keepScreenAwake();
+  document.getElementById('hudMode').innerText = title;
+
   audio.init();
+  motion.start();
+
+  if ('wakeLock' in navigator) {
+    navigator.wakeLock.request('screen').catch(() => {});
+  }
 }
 
-// --- BUTTON EVENT LISTENERS ---
-
-// 1. Wall Mode (Solo practice)
 document.getElementById('btnWall').addEventListener('click', async () => {
-  const granted = await motionProcessor.requestPermission();
-  if (!granted) {
-    alert("Motion sensors required to play AeroTennis.");
+  const ok = await motion.requestPermission();
+  if (!ok) {
+    alert("Motion sensor access is strictly required to play.");
     return;
   }
-  activateHUD();
-  motionProcessor.start();
-  match = new TennisMatch(audio, umpire, false, null);
-  match.startMatch();
+  launchGame("SOLO WALL PRACTICE");
+  match = new TennisMatchController(audio, 'WALL', null);
+  match.start();
 });
 
-// 2. Create Match (Multiplayer Host)
 document.getElementById('btnCreate').addEventListener('click', async () => {
-  const granted = await motionProcessor.requestPermission();
-  if (!granted) {
-    alert("Motion sensors required to play AeroTennis.");
-    return;
-  }
-  document.getElementById('statusText').innerText = "Generating Room...";
-  network = new NetworkManager(
-    (dir, dur) => match.triggerIncomingBall(dir, dur),
-    (s) => {}
-  );
+  const ok = await motion.requestPermission();
+  if (!ok) return;
 
-  network.initHost((code) => {
-    document.getElementById('statusText').innerHTML = 
-      `ROOM CODE: <b style="color:var(--neon-green); font-size:1.3rem;">${code}</b><br/>Share this code with your opponent.`;
-    
-    // When opponent connects
-    network.peer.on('connection', (c) => {
-      c.on('open', () => {
-        activateHUD();
-        motionProcessor.start();
-        match = new TennisMatch(audio, umpire, true, (pkt) => network.send(pkt));
-        match.startMatch();
+  const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+  document.getElementById('statusText').innerHTML = 
+    `ROOM: <b style="color:var(--green); font-size:1.2rem;">${code}</b><br/>Waiting for Player 2...`;
+
+  peer = new Peer('aerotennis-' + code);
+  peer.on('connection', (c) => {
+    conn = c;
+    const onOpen = () => {
+      launchGame("1v1 ARENA (HOST)");
+      match = new TennisMatchController(audio, 'HOST', (pkt) => conn.send(pkt));
+
+      conn.on('data', (d) => {
+        if (d.type === 'BALL') match.receiveBall(d.direction, d.duration);
+        else if (d.type === 'GUEST_MISS') match.awardPoint(0);
       });
-    });
+
+      match.start();
+    };
+
+    if (conn.open) onOpen();
+    else conn.on('open', onOpen);
   });
+
+  peer.on('error', (e) => alert("P2P Signaling Error: " + e.type));
 });
 
-// 3. Join Match (Multiplayer Peer)
 document.getElementById('btnJoin').addEventListener('click', async () => {
-  const code = document.getElementById('roomInput').value;
-  if (code.length < 6) {
-    alert("Please enter a valid 6-digit code.");
+  const code = document.getElementById('roomInput').value.trim().toUpperCase();
+  if (code.length < 4) {
+    alert("Please enter a valid room code.");
     return;
   }
-  const granted = await motionProcessor.requestPermission();
-  if (!granted) {
-    alert("Motion sensors required to play AeroTennis.");
-    return;
-  }
-  document.getElementById('statusText').innerText = "Connecting to peer...";
+  const ok = await motion.requestPermission();
+  if (!ok) return;
 
-  network = new NetworkManager(
-    (dir, dur) => match.triggerIncomingBall(dir, dur),
-    (s) => {}
-  );
+  document.getElementById('statusText').innerText = "Connecting...";
+  peer = new Peer();
+  peer.on('open', () => {
+    conn = peer.connect('aerotennis-' + code, { reliable: true });
+    const onOpen = () => {
+      launchGame("1v1 ARENA (GUEST)");
+      match = new TennisMatchController(audio, 'GUEST', (pkt) => conn.send(pkt));
 
-  network.joinRoom(code, () => {
-    activateHUD();
-    motionProcessor.start();
-    match = new TennisMatch(audio, umpire, true, (pkt) => network.send(pkt));
-    match.serverIdx = 1; // Joiner receives first
-    match.startMatch();
-  }, (err) => {
-    alert("Could not connect to room. Check the code and try again.");
-    document.getElementById('statusText').innerText = "Connection Failed.";
+      conn.on('data', (d) => {
+        if (d.type === 'BALL') match.receiveBall(d.direction, d.duration);
+        else if (d.type === 'CMD_SERVE') {
+          match.server = 1;
+          match.nextPoint();
+        } else if (d.type === 'SYNC') {
+          match.points = d.points;
+          match.games = d.games;
+          match.server = d.server;
+          match.updateHUD();
+        }
+      });
+    };
+
+    if (conn.open) onOpen();
+    else conn.on('open', onOpen);
   });
+
+  peer.on('error', () => alert("Could not find or connect to room code."));
 });
 
-// Forfeit / Exit
-document.getElementById('btnQuit').addEventListener('click', () => {
-  window.location.reload();
-});
+document.getElementById('btnQuit').addEventListener('click', () => window.location.reload());
 </script>
 </body>
 </html>

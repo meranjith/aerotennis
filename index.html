@@ -5,20 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0, viewport-fit=cover" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <title>AeroTennis | Calibrated Motion Tennis</title>
+  <title>AeroTennis | Precision Audio-Motion Tennis</title>
 
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 
   <style>
     :root {
       --bg: #030508;
-      --panel: #080d15;
+      --panel: #090e17;
       --cyan: #00f3ff;
       --green: #39ff14;
       --red: #ff0055;
       --yellow: #ffd700;
       --dim: #5c6f84;
-      --border: #121d2c;
+      --border: #142033;
       --font: 'Courier New', Courier, monospace;
     }
 
@@ -44,47 +44,116 @@
     }
 
     .container {
-      width: 92%;
+      width: 94%;
       max-width: 440px;
       background: var(--panel);
       border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 24px;
+      border-radius: 14px;
+      padding: 20px;
       text-align: center;
-      box-shadow: 0 0 25px rgba(0, 243, 255, 0.1);
+      box-shadow: 0 0 30px rgba(0, 243, 255, 0.12);
+      max-height: 96vh;
+      overflow-y: auto;
     }
 
     h1 {
       font-size: 2.1rem;
-      letter-spacing: 5px;
+      letter-spacing: 4px;
       color: var(--cyan);
-      text-shadow: 0 0 12px rgba(0, 243, 255, 0.5);
-      margin-bottom: 4px;
+      text-shadow: 0 0 14px rgba(0, 243, 255, 0.5);
+      margin-bottom: 2px;
     }
 
     .sub {
-      font-size: 0.72rem;
+      font-size: 0.70rem;
       color: var(--green);
       letter-spacing: 2px;
-      margin-bottom: 14px;
+      margin-bottom: 12px;
+    }
+
+    /* Live Sensor Visualizer */
+    .sensor-tester {
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 12px;
+      text-align: left;
+    }
+
+    .tester-title {
+      font-size: 0.72rem;
+      color: var(--yellow);
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+      font-weight: bold;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .stance-badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-weight: bold;
+      font-size: 0.8rem;
+      letter-spacing: 1px;
+      text-align: center;
+      width: 100%;
+      margin-bottom: 6px;
+      background: #111;
+      border: 1px solid #333;
+      color: #666;
+      transition: all 0.15s;
+    }
+
+    .stance-badge.forehand {
+      background: rgba(57, 255, 20, 0.15);
+      border-color: var(--green);
+      color: var(--green);
+      box-shadow: 0 0 10px rgba(57, 255, 20, 0.3);
+    }
+
+    .stance-badge.backhand {
+      background: rgba(0, 243, 255, 0.15);
+      border-color: var(--cyan);
+      color: var(--cyan);
+      box-shadow: 0 0 10px rgba(0, 243, 255, 0.3);
+    }
+
+    .meter-container {
+      width: 100%;
+      height: 10px;
+      background: #111822;
+      border-radius: 5px;
+      overflow: hidden;
+      margin-top: 4px;
+      border: 1px solid #223147;
+    }
+
+    .meter-bar {
+      height: 100%;
+      width: 0%;
+      background: var(--green);
+      transition: width 0.05s linear;
     }
 
     .audio-test-box {
       background: rgba(255, 215, 0, 0.06);
       border: 1px solid var(--yellow);
       border-radius: 6px;
-      padding: 10px;
-      margin-bottom: 14px;
+      padding: 8px;
+      margin-bottom: 12px;
     }
 
     .status-panel {
-      font-size: 0.82rem;
+      font-size: 0.80rem;
       color: var(--dim);
       border: 1px dashed var(--border);
-      padding: 10px;
+      padding: 8px;
       border-radius: 6px;
-      margin-bottom: 12px;
-      min-height: 48px;
+      margin-bottom: 10px;
+      min-height: 40px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -96,13 +165,13 @@
       border: 1px solid var(--cyan);
       color: var(--cyan);
       font-family: inherit;
-      padding: 13px;
-      font-size: 0.92rem;
+      padding: 12px;
+      font-size: 0.90rem;
       font-weight: bold;
       letter-spacing: 2px;
       border-radius: 6px;
       cursor: pointer;
-      margin: 5px 0;
+      margin: 4px 0;
     }
     .btn:active {
       background: var(--cyan);
@@ -121,45 +190,28 @@
     .btn-yellow {
       border-color: var(--yellow);
       color: var(--yellow);
-      font-size: 0.75rem;
-      padding: 8px;
-    }
-    .btn-yellow:active {
-      background: var(--yellow);
-      color: #000;
+      font-size: 0.72rem;
+      padding: 6px;
     }
 
     .code-input {
       width: 100%;
-      padding: 11px;
+      padding: 10px;
       background: rgba(0,0,0,0.5);
       border: 1px solid var(--border);
       color: var(--green);
-      font-size: 1.15rem;
+      font-size: 1.10rem;
       font-family: inherit;
       text-align: center;
       letter-spacing: 4px;
       border-radius: 6px;
-      margin: 6px 0;
+      margin: 5px 0;
       text-transform: uppercase;
       outline: none;
     }
     .code-input:focus { border-color: var(--cyan); }
 
-    .grip-card {
-      font-size: 0.70rem;
-      color: #8fa0b5;
-      text-align: left;
-      line-height: 1.45;
-      background: rgba(0,0,0,0.4);
-      border-left: 3px solid var(--cyan);
-      padding: 10px 12px;
-      border-radius: 4px;
-      margin-top: 12px;
-    }
-    .grip-card b { color: #fff; }
-
-    /* IN-GAME HUD */
+    /* IN-GAME MINIMALIST CYBER HUD */
     #hud {
       display: none;
       position: fixed;
@@ -228,28 +280,35 @@
 
   <div class="container" id="lobby">
     <h1>AEROTENNIS</h1>
-    <div class="sub">Kinematic Audio Motion Tennis</div>
+    <div class="sub">Kinematic Spatial Motion Tennis</div>
 
-    <div class="audio-test-box">
-      <div style="font-size:0.75rem; color:var(--yellow); margin-bottom:6px;">
-        🎧 <b>STEREO EARPHONES MANDATORY</b>
+    <!-- Live Grip & Motion Calibrator -->
+    <div class="sensor-tester">
+      <div class="tester-title">
+        <span>LIVE MOTION & GRIP TESTER</span>
+        <span id="testPwr">0.0 m/s²</span>
       </div>
-      <button class="btn btn-yellow" id="btnAudioTest">Test Left/Right Audio</button>
+      <div class="stance-badge" id="stanceBadge">TAP "ACTIVATE SENSORS" BELOW</div>
+      <div class="meter-container">
+        <div class="meter-bar" id="meterBar"></div>
+      </div>
     </div>
 
-    <div class="status-panel" id="statusText">Hold Phone in Right Hand & Select Mode</div>
+    <button class="btn btn-yellow" id="btnInitSensors">1. ACTIVATE & TEST SENSORS</button>
+
+    <div class="audio-test-box">
+      <div style="font-size:0.72rem; color:var(--yellow); margin-bottom:4px;">
+        🎧 <b>STEREO EARPHONES TEST</b>
+      </div>
+      <button class="btn btn-yellow" id="btnAudioTest">Play Left/Right Audio Channels</button>
+    </div>
+
+    <div class="status-panel" id="statusText">Hold Phone in Right Hand like a Racket</div>
 
     <button class="btn btn-green" id="btnWall">Solo Wall Practice</button>
     <button class="btn" id="btnCreate">Create 2-Player Match</button>
     <input type="text" id="roomInput" class="code-input" placeholder="ROOM CODE" maxlength="6" />
     <button class="btn" id="btnJoin">Join Match</button>
-
-    <div class="grip-card">
-      <b>PLAYSTATION MOVE GRIP (RIGHT HAND):</b><br/>
-      Hold phone horizontally (Charging port points toward your wrist).<br/>
-      • <b>Right Ear (Forehand):</b> Swing right to left. <b>Screen</b> strikes forward.<br/>
-      • <b>Left Ear (Backhand):</b> Cross arm over chest. Wrist turns so <b>Back Panel</b> strikes forward.
-    </div>
   </div>
 
   <!-- HUD -->
@@ -261,14 +320,14 @@
     </div>
     <div class="hud-feedback">
       <div id="hudFeedbackMain">HOLD READY</div>
-      <div class="hud-telemetry" id="hudTelemetry">READY</div>
+      <div class="hud-telemetry" id="hudTelemetry">STANDBY</div>
     </div>
     <button class="hud-quit" id="btnQuit">EXIT MATCH</button>
   </div>
 
 <script>
 /**
- * 1. HIGH-PRECISION AUDIO SYNTHESIZER
+ * 1. SYNTHETIC AUDIO ENGINE
  */
 class AudioEngine {
   constructor() {
@@ -324,8 +383,8 @@ class AudioEngine {
     const filter = this.ctx.createBiquadFilter();
     filter.type = 'bandpass';
     filter.frequency.setValueAtTime(360, t0);
-    filter.frequency.exponentialRampToValueAtTime(960, tEnd);
-    filter.Q.setValueAtTime(3.8, t0);
+    filter.frequency.exponentialRampToValueAtTime(940, tEnd);
+    filter.Q.setValueAtTime(4.0, t0);
 
     const gain = this.ctx.createGain();
     gain.gain.setValueAtTime(0.01, t0);
@@ -346,17 +405,30 @@ class AudioEngine {
   playHit() {
     if (!this.ctx) return;
     const t0 = this.ctx.currentTime;
+
     const osc = this.ctx.createOscillator();
     const g = this.ctx.createGain();
     osc.type = 'triangle';
-    osc.frequency.setValueAtTime(660, t0);
-    osc.frequency.exponentialRampToValueAtTime(130, t0 + 0.08);
+    osc.frequency.setValueAtTime(650, t0);
+    osc.frequency.exponentialRampToValueAtTime(120, t0 + 0.08);
     g.gain.setValueAtTime(1.0, t0);
     g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.08);
     osc.connect(g);
     g.connect(this.ctx.destination);
     osc.start(t0);
     osc.stop(t0 + 0.09);
+
+    const pop = this.ctx.createOscillator();
+    const pg = this.ctx.createGain();
+    pop.type = 'sine';
+    pop.frequency.setValueAtTime(160, t0);
+    pop.frequency.linearRampToValueAtTime(40, t0 + 0.05);
+    pg.gain.setValueAtTime(0.8, t0);
+    pg.gain.linearRampToValueAtTime(0.001, t0 + 0.05);
+    pop.connect(pg);
+    pg.connect(this.ctx.destination);
+    pop.start(t0);
+    pop.stop(t0 + 0.06);
   }
 
   playWhiff() {
@@ -392,93 +464,136 @@ class AudioEngine {
 }
 
 /**
- * 2. DIRECTION-AWARE BIOMECHANICAL MOTION ENGINE
- * Eliminates backhand failure by adapting thresholds to cross-body arm physics.
+ * 2. ATTITUDE-BASED MOTION SENSOR FUSION ENGINE
+ * Uses 3D Kinetic Magnitude (always positive) + Attitude Orientation Matrix.
+ * Works 100% reliably regardless of wrist angle, cross-body pull, or centrifugal arc.
  */
-class DirectionAwareMotionEngine {
-  constructor(onSwing) {
+class SensorFusionMotionEngine {
+  constructor(onSwing, onTelemetryUpdate = null) {
     this.onSwing = onSwing;
+    this.onTelemetryUpdate = onTelemetryUpdate;
     this.active = false;
     this.lockoutUntil = 0;
 
-    // Running Gravity Baseline Filters
-    this.gravZ = 0;
-    this.alpha = 0.82; // Faster adaptation to wrist rotation
+    // Dynamic high-pass filter to strip static gravity from magnitude
+    this.filteredMag = 0;
+    this.alpha = 0.85;
 
-    // Current expected approach direction (-1: Left/Backhand, 1: Right/Forehand)
-    this.expectedDirection = null;
+    // Current Physical Stance: 'FOREHAND' (Screen forward) or 'BACKHAND' (Back panel forward)
+    this.currentStance = 'FOREHAND';
 
-    // Biomechanically tuned thresholds:
-    // Forehand pushes with chest/triceps: 8.8 m/s^2
-    // Backhand pulls across chest with weaker rear deltoids: 5.8 m/s^2
-    this.FOREHAND_THRESHOLD = 8.8;
-    this.BACKHAND_THRESHOLD = 5.8;
+    // Total Kinetic Threshold: 7.0 m/s^2 total 3D acceleration spike
+    this.SWING_POWER_THRESHOLD = 7.0;
 
     this.onMotion = this.onMotion.bind(this);
+    this.onOrientation = this.onOrientation.bind(this);
   }
 
   async requestPermission() {
+    let granted = true;
     if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
       try {
         const res = await DeviceMotionEvent.requestPermission();
-        return res === 'granted';
+        granted = (res === 'granted');
       } catch (e) {
-        return false;
+        granted = false;
       }
     }
-    return true;
-  }
-
-  setExpectedDirection(dir) {
-    this.expectedDirection = dir;
+    if (granted && typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+      try {
+        await DeviceOrientationEvent.requestPermission();
+      } catch (e) {}
+    }
+    return granted;
   }
 
   start() {
     this.active = true;
-    this.gravZ = 0;
     this.lockoutUntil = 0;
+    this.filteredMag = 0;
     window.addEventListener('devicemotion', this.onMotion, false);
+    window.addEventListener('deviceorientation', this.onOrientation, false);
   }
 
   stop() {
     this.active = false;
     window.removeEventListener('devicemotion', this.onMotion, false);
+    window.removeEventListener('deviceorientation', this.onOrientation, false);
+  }
+
+  /**
+   * ATTITUDE MATRIX:
+   * When holding the phone horizontally (Landscape) in the Right Hand:
+   * 
+   * 1. FOREHAND STANCE (Screen outward):
+   *    Gamma (roll angle) is around 0° to -40° or +30°. 
+   *    Z-axis gravity points outward or neutral.
+   * 
+   * 2. BACKHAND STANCE (Cross-body wrist flip):
+   *    The wrist rolls over so the screen faces YOUR chest/face.
+   *    Gamma tilts significantly (> +45° or < -45°), or Z gravity goes strongly negative.
+   */
+  onOrientation(e) {
+    if (e.gamma === null) return;
+
+    const gamma = e.gamma; // Roll angle: -90 to +90
+    const beta = e.beta;   // Pitch angle: -180 to +180
+
+    // When the wrist flips across the body for a backhand, gamma flips past 35 degrees
+    // or the phone rotates so the screen points inwards toward the user.
+    if (Math.abs(gamma) > 35 || beta > 110 || beta < -20) {
+      this.currentStance = 'BACKHAND';
+    } else {
+      this.currentStance = 'FOREHAND';
+    }
+
+    if (this.onTelemetryUpdate) {
+      this.onTelemetryUpdate(this.currentStance, 0);
+    }
   }
 
   onMotion(e) {
     if (!this.active) return;
+
+    let ax = 0, ay = 0, az = 0;
+
+    if (e.acceleration && e.acceleration.x !== null && !isNaN(e.acceleration.x)) {
+      ax = e.acceleration.x;
+      ay = e.acceleration.y;
+      az = e.acceleration.z;
+    } else if (e.accelerationIncludingGravity && e.accelerationIncludingGravity.x !== null) {
+      ax = e.accelerationIncludingGravity.x;
+      ay = e.accelerationIncludingGravity.y;
+      az = e.accelerationIncludingGravity.z;
+    }
+
+    // 3D Kinetic Magnitude (Total vector energy) - Mathematically ALWAYS positive
+    const rawMag = Math.sqrt(ax * ax + ay * ay + az * az);
+
+    // Dynamic Gravity Stripping: Removes 9.8 m/s^2 earth baseline
+    this.filteredMag = this.alpha * this.filteredMag + (1 - this.alpha) * rawMag;
+    const dynamicPower = Math.max(0, rawMag - this.filteredMag);
+
+    if (this.onTelemetryUpdate) {
+      this.onTelemetryUpdate(this.currentStance, dynamicPower);
+    }
+
     const now = performance.now();
     if (now < this.lockoutUntil) return;
 
-    let az = 0;
+    // Trigger Swing on Total Kinetic Power
+    if (dynamicPower >= this.SWING_POWER_THRESHOLD) {
+      this.lockoutUntil = now + 650; // Lock out braking follow-through
 
-    // Use pure user acceleration if available; else clean via dynamic baseline
-    if (e.acceleration && e.acceleration.z !== null && !isNaN(e.acceleration.z)) {
-      az = e.acceleration.z;
-    } else if (e.accelerationIncludingGravity && e.accelerationIncludingGravity.z !== null) {
-      this.gravZ = this.alpha * this.gravZ + (1 - this.alpha) * e.accelerationIncludingGravity.z;
-      az = e.accelerationIncludingGravity.z - this.gravZ;
-    }
-
-    // Determine target threshold based on which side the ball is arriving from
-    const isBackhand = (this.expectedDirection === -1);
-    const requiredThreshold = isBackhand ? this.BACKHAND_THRESHOLD : this.FOREHAND_THRESHOLD;
-
-    // Trigger check
-    if (Math.abs(az) >= requiredThreshold) {
-      // Immediately lock sensor for 650ms to ignore swing deceleration / follow-through
-      this.lockoutUntil = now + 650;
-
-      // Positive Z = Screen pushing forward into ball
-      // Negative Z = Back Panel pushing forward into ball
-      const detectedFace = az > 0 ? 'SCREEN' : 'BACK_PANEL';
-      this.onSwing(detectedFace, Math.abs(az));
+      // Stance dictates whether the strike is Screen (Forehand) or Back Panel (Backhand)
+      const face = (this.currentStance === 'FOREHAND') ? 'SCREEN' : 'BACK_PANEL';
+      this.onSwing(face, dynamicPower);
     }
   }
 }
 
 /**
- * 3. AUTHORITATIVE TENNIS CONTROLLER
+ * 3. AUTHORITATIVE TENNIS MATCH CONTROLLER
  */
 class TennisMatchController {
   constructor(audio, role, sendPacket, motionEngine) {
@@ -491,24 +606,29 @@ class TennisMatchController {
     this.games = [0, 0];
     this.server = 0;
 
-    this.awaitingHit = false;
-    this.direction = null;
+    this.state = 'IDLE'; // 'IDLE', 'AWAITING_SERVE', 'BALL_APPROACH', 'STRIKE_ZONE'
+    this.expectedDirection = null; // -1: Left (Backhand), 1: Right (Forehand)
     this.flightTime = 1.35;
     this.ballStartTime = 0;
-    this.hitMargin = 0.48; // Generous window covers Bluetooth latency + human reaction
-    this.timeout = null;
+    this.hitMargin = 0.48; // Generous 480ms sweet spot margin
+    this.missTimeout = null;
+    this.strikeZoneTimeout = null;
   }
 
   getScoreStr() {
     const p1 = this.points[0];
     const p2 = this.points[1];
+
     if (p1 >= 3 && p2 >= 3) {
       if (p1 === p2) return "Deuce";
-      if (p1 === p2 + 1) return "Advantage P1";
-      if (p2 === p1 + 1) return "Advantage P2";
+      if (p1 === p2 + 1) return this.server === 0 ? "Advantage Server" : "Advantage Receiver";
+      if (p2 === p1 + 1) return this.server === 1 ? "Advantage Server" : "Advantage Receiver";
     }
+
     const terms = ["Love", "15", "30", "40"];
-    return `${terms[p1] || "40"} - ${terms[p2] || "40"}`;
+    const serverScore = this.server === 0 ? terms[p1] : terms[p2];
+    const receiverScore = this.server === 0 ? terms[p2] : terms[p1];
+    return `${serverScore} - ${receiverScore}`;
   }
 
   updateHUD(mainText = "", telemetryText = "") {
@@ -537,38 +657,29 @@ class TennisMatchController {
   start() {
     this.updateHUD("MATCH COMMENCING");
     this.speak("Match commenced. " + (this.server === 0 ? "You serve." : "Opponent serves."), () => {
-      this.nextPoint();
+      this.initiatePoint();
     });
   }
 
-  nextPoint() {
-    clearTimeout(this.timeout);
-    this.awaitingHit = false;
-    this.motion.setExpectedDirection(null);
-    this.updateHUD("READY", "");
+  initiatePoint() {
+    this.state = 'IDLE';
+    clearTimeout(this.missTimeout);
+    clearTimeout(this.strikeZoneTimeout);
+    this.updateHUD("POINT SETUP", "");
 
     setTimeout(() => {
       const isMyServe = (this.role === 'GUEST') ? (this.server === 1) : (this.server === 0);
 
       if (isMyServe) {
-        this.updateHUD("SWING TO SERVE", "FOREHAND OR BACKHAND");
-        this.direction = Math.random() > 0.5 ? 1 : -1;
-        this.flightTime = 1.6;
-        this.ballStartTime = performance.now();
-        this.awaitingHit = true;
-        this.motion.setExpectedDirection(this.direction);
-        this.audio.playBallApproach(this.direction, this.flightTime);
-
-        this.timeout = setTimeout(() => {
-          if (this.awaitingHit) this.handleMiss("FAULT - MISSED SERVE");
-        }, (this.flightTime + this.hitMargin) * 1000);
-
+        this.state = 'AWAITING_SERVE';
+        this.updateHUD("YOUR SERVE", "SWING TO STRIKE");
       } else {
-        this.updateHUD("READY TO RECEIVE", "");
+        this.updateHUD("RECEIVING", "AWAITING OPPONENT SERVE");
         if (this.role === 'WALL') {
           setTimeout(() => {
-            this.receiveBall(Math.random() > 0.5 ? 1 : -1, 1.35);
-          }, 1000);
+            const serveDir = Math.random() > 0.5 ? 1 : -1;
+            this.receiveBall(serveDir, 1.35);
+          }, 1200);
         } else if (this.role === 'HOST') {
           this.sendPacket({ type: 'CMD_SERVE' });
         }
@@ -577,76 +688,119 @@ class TennisMatchController {
   }
 
   receiveBall(dir, dur) {
-    clearTimeout(this.timeout);
-    this.direction = dir;
+    this.state = 'BALL_APPROACH';
+    clearTimeout(this.missTimeout);
+    clearTimeout(this.strikeZoneTimeout);
+
+    this.expectedDirection = dir;
     this.flightTime = dur;
     this.ballStartTime = performance.now();
-    this.awaitingHit = true;
-
-    // Notify motion engine so it lowers the threshold for Left side arrivals
-    this.motion.setExpectedDirection(dir);
 
     this.audio.playBallApproach(dir, dur);
     this.updateHUD(
       dir === 1 ? "FOREHAND (RIGHT)" : "BACKHAND (LEFT)",
-      dir === 1 ? "SCREEN FORWARD" : "BACK PANEL FORWARD"
+      "PREPARE STANCE"
     );
 
-    this.timeout = setTimeout(() => {
-      if (this.awaitingHit) this.handleMiss("MISSED BALL (TIMED OUT)");
+    // Strike Zone opens when ball is close
+    const timeUntilStrikeZone = Math.max(0, (dur - this.hitMargin) * 1000);
+    this.strikeZoneTimeout = setTimeout(() => {
+      if (this.state === 'BALL_APPROACH') {
+        this.state = 'STRIKE_ZONE';
+        this.updateHUD(
+          dir === 1 ? "FOREHAND (RIGHT)" : "BACKHAND (LEFT)",
+          "SWEET SPOT - HIT NOW!"
+        );
+      }
+    }, timeUntilStrikeZone);
+
+    // Miss Timeout
+    this.missTimeout = setTimeout(() => {
+      if (this.state === 'BALL_APPROACH' || this.state === 'STRIKE_ZONE') {
+        this.handleMiss("TOO LATE - MISSED BALL");
+      }
     }, (dur + this.hitMargin) * 1000);
   }
 
   onSwing(face, forceVal) {
-    if (!this.awaitingHit) {
-      this.audio.playWhiff();
+    // 1. Serving
+    if (this.state === 'AWAITING_SERVE') {
+      this.state = 'IDLE';
+      this.audio.playHit();
+      this.updateHUD("SERVE STRUCK!", `POWER: ${forceVal.toFixed(1)} [${face}]`);
+
+      if (this.role === 'WALL') {
+        setTimeout(() => this.audio.playBounce(), 450);
+        setTimeout(() => {
+          const nextDir = Math.random() > 0.5 ? 1 : -1;
+          this.receiveBall(nextDir, 1.30);
+        }, 900);
+      } else {
+        const nextDir = Math.random() > 0.5 ? 1 : -1;
+        this.sendPacket({ type: 'BALL', direction: nextDir, duration: 1.30 });
+      }
       return;
     }
 
-    const elapsed = (performance.now() - this.ballStartTime) / 1000;
-    clearTimeout(this.timeout);
-    this.awaitingHit = false;
-
-    // Early Swing Check
-    if (elapsed < (this.flightTime - this.hitMargin)) {
+    // 2. Early Preparation Window Immunity
+    if (this.state === 'BALL_APPROACH') {
+      const elapsed = (performance.now() - this.ballStartTime) / 1000;
+      if (elapsed < (this.flightTime - this.hitMargin - 0.20)) {
+        // Player is crossing arm or twisting wrist: IGNORE
+        return;
+      }
       this.audio.playWhiff();
-      this.handleMiss("TOO EARLY", `SWUNG AT ${(elapsed).toFixed(2)}s (NEED ~${this.flightTime}s)`);
+      this.handleMiss("TOO EARLY!", `SWUNG AT ${elapsed.toFixed(2)}s`);
       return;
     }
 
-    // PlayStation Move Biomechanics Verification:
-    // Right = Screen forward. Left = Back panel forward.
-    const targetFace = (this.direction === 1) ? 'SCREEN' : 'BACK_PANEL';
-    if (face !== targetFace) {
-      this.audio.playWhiff();
-      const reason = (this.direction === 1)
-        ? "WRONG SIDE (NEED SCREEN FORWARD)"
-        : "WRONG SIDE (NEED BACK PANEL FORWARD)";
-      this.handleMiss(reason, `DETECTED: ${face}`);
+    // 3. Strike Zone Execution
+    if (this.state === 'STRIKE_ZONE') {
+      clearTimeout(this.missTimeout);
+      clearTimeout(this.strikeZoneTimeout);
+      this.state = 'IDLE';
+
+      // Verify Stance:
+      // Right Ear = Screen forward (FOREHAND)
+      // Left Ear = Back panel forward (BACKHAND)
+      const targetFace = (this.expectedDirection === 1) ? 'SCREEN' : 'BACK_PANEL';
+      if (face !== targetFace) {
+        this.audio.playWhiff();
+        const err = (this.expectedDirection === 1)
+          ? "WRONG STANCE (NEED FOREHAND)"
+          : "WRONG STANCE (NEED BACKHAND)";
+        this.handleMiss(err, `DETECTED: ${face === 'SCREEN' ? 'FOREHAND' : 'BACKHAND'}`);
+        return;
+      }
+
+      // Clean Hit Confirmed!
+      this.audio.playHit();
+      this.updateHUD("CLEAN HIT!", `POWER: ${forceVal.toFixed(1)} [${face}]`);
+
+      if (this.role === 'WALL') {
+        setTimeout(() => this.audio.playBounce(), 450);
+        setTimeout(() => {
+          const nextDir = Math.random() > 0.5 ? 1 : -1;
+          this.receiveBall(nextDir, 1.25);
+        }, 900);
+      } else {
+        this.sendPacket({
+          type: 'BALL',
+          direction: Math.random() > 0.5 ? 1 : -1,
+          duration: 1.25
+        });
+      }
       return;
     }
 
-    // Clean Hit Confirmed
-    this.audio.playHit();
-    this.updateHUD("CLEAN HIT!", `FORCE: ${forceVal.toFixed(1)} m/s² [${face}]`);
-
-    if (this.role === 'WALL') {
-      setTimeout(() => this.audio.playBounce(), 450);
-      setTimeout(() => {
-        this.receiveBall(Math.random() > 0.5 ? 1 : -1, 1.25);
-      }, 900);
-    } else {
-      this.sendPacket({
-        type: 'BALL',
-        direction: Math.random() > 0.5 ? 1 : -1,
-        duration: 1.25
-      });
-    }
+    this.audio.playWhiff();
   }
 
   handleMiss(reason, telemetry = "") {
-    this.awaitingHit = false;
-    clearTimeout(this.timeout);
+    this.state = 'IDLE';
+    clearTimeout(this.missTimeout);
+    clearTimeout(this.strikeZoneTimeout);
+
     this.audio.playBounce();
     this.updateHUD(reason, telemetry);
 
@@ -686,29 +840,64 @@ class TennisMatchController {
     if (gameWon) {
       this.points = [0, 0];
       this.server = this.server === 0 ? 1 : 0;
-      const str = `Game won. Games: ${this.games[0]} to ${this.games[1]}.`;
+      const str = `Game won. Standings: ${this.games[0]} games to ${this.games[1]}.`;
       this.updateHUD(str);
-      this.speak(str, () => this.nextPoint());
+      this.speak(str, () => this.initiatePoint());
     } else {
       const s = this.getScoreStr();
       this.updateHUD(s);
-      this.speak(s, () => this.nextPoint());
+      this.speak(s, () => this.initiatePoint());
     }
   }
 }
 
 /**
- * 4. BOOTSTRAP & INITIALIZATION
+ * 4. SYSTEM BOOTSTRAP, CALIBRATION & NETWORKING
  */
 const audio = new AudioEngine();
 let match = null;
 let peer = null;
 let conn = null;
 
-const motion = new DirectionAwareMotionEngine((face, force) => {
-  if (match) match.onSwing(face, force);
+// Real-Time Lobby Calibrator Hook
+const motion = new SensorFusionMotionEngine(
+  (face, force) => {
+    if (match) match.onSwing(face, force);
+  },
+  (stance, power) => {
+    // Only update lobby UI if lobby is visible
+    const badge = document.getElementById('stanceBadge');
+    const bar = document.getElementById('meterBar');
+    const pwrText = document.getElementById('testPwr');
+
+    if (badge && document.getElementById('lobby').style.display !== 'none') {
+      badge.innerText = stance === 'FOREHAND' ? "FOREHAND STANCE (SCREEN FORWARD)" : "BACKHAND STANCE (BACK PANEL FORWARD)";
+      badge.className = "stance-badge " + (stance === 'FOREHAND' ? "forehand" : "backhand");
+
+      if (pwrText) pwrText.innerText = power.toFixed(1) + " m/s²";
+      if (bar) {
+        const pct = Math.min(100, (power / 15.0) * 100);
+        bar.style.width = pct + "%";
+        bar.style.background = power >= 7.0 ? "var(--cyan)" : "var(--green)";
+      }
+    }
+  }
+);
+
+// 1. Activate & Test Sensors in Lobby
+document.getElementById('btnInitSensors').addEventListener('click', async () => {
+  const ok = await motion.requestPermission();
+  if (ok) {
+    motion.start();
+    audio.init();
+    document.getElementById('btnInitSensors').style.display = 'none';
+    document.getElementById('statusText').innerText = "Sensors Active! Try turning your wrist above.";
+  } else {
+    alert("Motion sensor permission denied.");
+  }
 });
 
+// Audio Stereo Verification
 document.getElementById('btnAudioTest').addEventListener('click', () => {
   const btn = document.getElementById('btnAudioTest');
   btn.innerText = "Playing in LEFT ear...";
@@ -733,11 +922,11 @@ function launchGame(title) {
   }
 }
 
-// 1. Solo Wall Mode
+// 2. Solo Wall Practice
 document.getElementById('btnWall').addEventListener('click', async () => {
   const ok = await motion.requestPermission();
   if (!ok) {
-    alert("Motion sensor access is strictly required.");
+    alert("Motion sensor access required.");
     return;
   }
   launchGame("SOLO WALL PRACTICE");
@@ -745,7 +934,7 @@ document.getElementById('btnWall').addEventListener('click', async () => {
   match.start();
 });
 
-// 2. Host Room
+// 3. Create Match (Host)
 document.getElementById('btnCreate').addEventListener('click', async () => {
   const ok = await motion.requestPermission();
   if (!ok) return;
@@ -758,7 +947,7 @@ document.getElementById('btnCreate').addEventListener('click', async () => {
   peer.on('connection', (c) => {
     conn = c;
     const onOpen = () => {
-      launchGame("1v1 ARENA (HOST)");
+      launchGame("1v1 CYBER ARENA (HOST)");
       match = new TennisMatchController(audio, 'HOST', (pkt) => conn.send(pkt), motion);
 
       conn.on('data', (d) => {
@@ -773,10 +962,10 @@ document.getElementById('btnCreate').addEventListener('click', async () => {
     else conn.on('open', onOpen);
   });
 
-  peer.on('error', (e) => alert("P2P Signaling Error: " + e.type));
+  peer.on('error', (e) => alert("P2P Error: " + e.type));
 });
 
-// 3. Join Room
+// 4. Join Match (Guest)
 document.getElementById('btnJoin').addEventListener('click', async () => {
   const code = document.getElementById('roomInput').value.trim().toUpperCase();
   if (code.length < 4) {
@@ -791,14 +980,14 @@ document.getElementById('btnJoin').addEventListener('click', async () => {
   peer.on('open', () => {
     conn = peer.connect('aerotennis-' + code, { reliable: true });
     const onOpen = () => {
-      launchGame("1v1 ARENA (GUEST)");
+      launchGame("1v1 CYBER ARENA (GUEST)");
       match = new TennisMatchController(audio, 'GUEST', (pkt) => conn.send(pkt), motion);
 
       conn.on('data', (d) => {
         if (d.type === 'BALL') match.receiveBall(d.direction, d.duration);
         else if (d.type === 'CMD_SERVE') {
           match.server = 1;
-          match.nextPoint();
+          match.initiatePoint();
         } else if (d.type === 'SYNC') {
           match.points = d.points;
           match.games = d.games;

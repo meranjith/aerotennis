@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0, viewport-fit=cover" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <title>AeroTennis | Precision Audio-Motion Cyber Tennis</title>
+  <title>AeroTennis | Calibrated Cyber Motion Tennis</title>
 
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 
@@ -71,79 +71,29 @@
       margin-bottom: 12px;
     }
 
-    /* Live Swing Calibration Visualizer */
-    .sensor-tester {
-      background: rgba(0, 0, 0, 0.5);
-      border: 1px solid var(--border);
+    /* Calibration Card */
+    .calib-card {
+      background: rgba(255, 215, 0, 0.08);
+      border: 1px solid var(--yellow);
       border-radius: 8px;
       padding: 12px;
       margin-bottom: 12px;
       text-align: left;
     }
 
-    .tester-title {
-      font-size: 0.72rem;
+    .calib-title {
+      font-size: 0.80rem;
+      font-weight: bold;
       color: var(--yellow);
-      letter-spacing: 1px;
       margin-bottom: 6px;
-      font-weight: bold;
-      display: flex;
-      justify-content: space-between;
-    }
-
-    .stance-badge {
-      display: inline-block;
-      padding: 6px 8px;
-      border-radius: 4px;
-      font-weight: bold;
-      font-size: 0.8rem;
       letter-spacing: 1px;
-      text-align: center;
-      width: 100%;
-      margin-bottom: 6px;
-      background: #111;
-      border: 1px solid #333;
-      color: #777;
-      transition: all 0.15s;
     }
 
-    .stance-badge.forehand {
-      background: rgba(57, 255, 20, 0.18);
-      border-color: var(--green);
-      color: var(--green);
-      box-shadow: 0 0 12px rgba(57, 255, 20, 0.35);
-    }
-
-    .stance-badge.backhand {
-      background: rgba(0, 243, 255, 0.18);
-      border-color: var(--cyan);
-      color: var(--cyan);
-      box-shadow: 0 0 12px rgba(0, 243, 255, 0.35);
-    }
-
-    .meter-container {
-      width: 100%;
-      height: 10px;
-      background: #111822;
-      border-radius: 5px;
-      overflow: hidden;
-      margin-top: 4px;
-      border: 1px solid #223147;
-    }
-
-    .meter-bar {
-      height: 100%;
-      width: 0%;
-      background: var(--green);
-      transition: width 0.05s linear;
-    }
-
-    .audio-test-box {
-      background: rgba(255, 215, 0, 0.06);
-      border: 1px solid var(--yellow);
-      border-radius: 6px;
-      padding: 8px;
-      margin-bottom: 12px;
+    .calib-step {
+      font-size: 0.75rem;
+      color: #fff;
+      line-height: 1.4;
+      margin-bottom: 8px;
     }
 
     .status-panel {
@@ -190,8 +140,12 @@
     .btn-yellow {
       border-color: var(--yellow);
       color: var(--yellow);
-      font-size: 0.72rem;
-      padding: 6px;
+      font-size: 0.75rem;
+      padding: 8px;
+    }
+    .btn-yellow:active {
+      background: var(--yellow);
+      color: #000;
     }
 
     .code-input {
@@ -211,7 +165,7 @@
     }
     .code-input:focus { border-color: var(--cyan); }
 
-    /* HUD */
+    /* IN-GAME HUD */
     #hud {
       display: none;
       position: fixed;
@@ -274,36 +228,65 @@
       border-radius: 4px;
       cursor: pointer;
     }
+
+    /* Modal Calibration Overlay */
+    #calibModal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(3, 5, 8, 0.96);
+      z-index: 200;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 30px;
+      text-align: center;
+    }
+
+    .modal-step {
+      font-size: 1.3rem;
+      color: var(--yellow);
+      margin-bottom: 12px;
+      letter-spacing: 2px;
+    }
+
+    .modal-desc {
+      font-size: 0.85rem;
+      color: #b0c4de;
+      line-height: 1.5;
+      margin-bottom: 24px;
+    }
+
+    .meter-circle {
+      width: 120px;
+      height: 120px;
+      border: 2px solid var(--cyan);
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 1.2rem;
+      color: var(--cyan);
+      margin-bottom: 24px;
+      box-shadow: 0 0 20px rgba(0, 243, 255, 0.2);
+    }
   </style>
 </head>
 <body>
 
   <div class="container" id="lobby">
     <h1>AEROTENNIS</h1>
-    <div class="sub">Balanced Spatial Motion Tennis</div>
+    <div class="sub">Direct-Calibrated Motion Tennis</div>
 
-    <!-- Live Grip & Motion Tester -->
-    <div class="sensor-tester">
-      <div class="tester-title">
-        <span>LIVE GRIP & STRIKE MONITOR</span>
-        <span id="testPwr">0.0 m/s²</span>
+    <div class="calib-card">
+      <div class="calib-title">HARDWARE POLARITY STATUS</div>
+      <div class="calib-step" id="calibStatus">
+        ⚠️ Hardware not calibrated yet. Tap below to map your phone's exact forward and back axes.
       </div>
-      <div class="stance-badge" id="stanceBadge">TAP "ACTIVATE SENSORS" BELOW</div>
-      <div class="meter-container">
-        <div class="meter-bar" id="meterBar"></div>
-      </div>
+      <button class="btn btn-yellow" id="btnStartCalib">CALIBRATE SWINGS (10 SECONDS)</button>
     </div>
 
-    <button class="btn btn-yellow" id="btnInitSensors">1. ACTIVATE & TEST SENSORS</button>
-
-    <div class="audio-test-box">
-      <div style="font-size:0.72rem; color:var(--yellow); margin-bottom:4px;">
-        🎧 <b>STEREO EARPHONES TEST</b>
-      </div>
-      <button class="btn btn-yellow" id="btnAudioTest">Play Left/Right Audio Channels</button>
-    </div>
-
-    <div class="status-panel" id="statusText">Hold Phone in Right Hand horizontally</div>
+    <div class="status-panel" id="statusText">Select Practice or Multiplayer</div>
 
     <button class="btn btn-green" id="btnWall">Solo Wall Practice</button>
     <button class="btn" id="btnCreate">Create 2-Player Match</button>
@@ -311,7 +294,18 @@
     <button class="btn" id="btnJoin">Join Match</button>
   </div>
 
-  <!-- HUD -->
+  <!-- CALIBRATION MODAL -->
+  <div id="calibModal">
+    <div class="modal-step" id="modalStepTitle">STEP 1 OF 2</div>
+    <div class="modal-desc" id="modalStepDesc">
+      Hold phone horizontally in right hand.<br/>
+      <b>Swing forward naturally with the SCREEN facing forward.</b>
+    </div>
+    <div class="meter-circle" id="modalPwrMeter">WAITING</div>
+    <div style="font-size:0.75rem; color:var(--dim);">SWING NOW TO REGISTER</div>
+  </div>
+
+  <!-- IN-GAME HUD -->
   <div id="hud">
     <div>
       <div class="hud-header" id="hudMode">ARENA</div>
@@ -342,27 +336,6 @@ class AudioEngine {
     if (this.ctx.state === 'suspended') {
       this.ctx.resume();
     }
-  }
-
-  playTestTone(dir, freq, onDone) {
-    this.init();
-    const t0 = this.ctx.currentTime;
-    const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
-    const panner = this.ctx.createStereoPanner();
-
-    osc.frequency.setValueAtTime(freq, t0);
-    panner.pan.setValueAtTime(dir, t0);
-    gain.gain.setValueAtTime(0.3, t0);
-    gain.gain.exponentialRampToValueAtTime(0.001, t0 + 0.35);
-
-    osc.connect(gain);
-    gain.connect(panner);
-    panner.connect(this.ctx.destination);
-
-    osc.start(t0);
-    osc.stop(t0 + 0.36);
-    setTimeout(onDone, 400);
   }
 
   playBallApproach(direction, duration) {
@@ -464,23 +437,23 @@ class AudioEngine {
 }
 
 /**
- * 2. SYMMETRICAL DUAL-AXIS MOTION ENGINE
- * Eliminates orientation flipping by verifying strike vector and stance together.
+ * 2. SELF-CALIBRATING MOTION ENGINE
+ * Records your phone's exact polarities (+Z vs -Z) so detection is 100% accurate.
  */
-class SymmetricalMotionEngine {
-  constructor(onSwing, onTelemetry = null) {
+class HardwareCalibratedMotionEngine {
+  constructor(onSwing) {
     this.onSwing = onSwing;
-    this.onTelemetry = onTelemetry;
     this.active = false;
     this.lockoutUntil = 0;
 
-    // Running Gravity Baseline Filters
+    // Default signs (auto-updated by calibration)
+    // 1 means positive Z is forehand, -1 means negative Z is forehand
+    this.forehandSign = parseInt(localStorage.getItem('aero_fh_sign')) || 1;
+    this.backhandSign = parseInt(localStorage.getItem('aero_bh_sign')) || -1;
+    this.isCalibrated = localStorage.getItem('aero_calibrated') === 'true';
+
     this.gravZ = 0;
     this.alpha = 0.82;
-
-    // Direct threshold parameters
-    this.FOREHAND_Z_THRESH = 4.5;  // +Z thrust (Screen forward)
-    this.BACKHAND_Z_THRESH = -4.2; // -Z thrust (Back panel forward)
 
     this.onMotion = this.onMotion.bind(this);
   }
@@ -495,6 +468,15 @@ class SymmetricalMotionEngine {
       }
     }
     return true;
+  }
+
+  setCalibration(fhSign, bhSign) {
+    this.forehandSign = fhSign;
+    this.backhandSign = bhSign;
+    this.isCalibrated = true;
+    localStorage.setItem('aero_fh_sign', fhSign);
+    localStorage.setItem('aero_bh_sign', bhSign);
+    localStorage.setItem('aero_calibrated', 'true');
   }
 
   start() {
@@ -513,41 +495,35 @@ class SymmetricalMotionEngine {
     if (!this.active) return;
 
     let az = 0;
-    let ax = 0;
-    let ay = 0;
-
-    // Extract user linear acceleration (hardware sensor fusion)
     if (e.acceleration && e.acceleration.z !== null && !isNaN(e.acceleration.z)) {
       az = e.acceleration.z;
-      ax = e.acceleration.x || 0;
-      ay = e.acceleration.y || 0;
     } else if (e.accelerationIncludingGravity && e.accelerationIncludingGravity.z !== null) {
       this.gravZ = this.alpha * this.gravZ + (1 - this.alpha) * e.accelerationIncludingGravity.z;
       az = e.accelerationIncludingGravity.z - this.gravZ;
-      ax = e.accelerationIncludingGravity.x || 0;
-      ay = e.accelerationIncludingGravity.y || 0;
-    }
-
-    const totalMag = Math.sqrt(ax * ax + ay * ay + az * az);
-
-    // Update lobby telemetry
-    if (this.onTelemetry) {
-      const liveFace = az >= 0 ? 'FOREHAND' : 'BACKHAND';
-      this.onTelemetry(liveFace, totalMag);
     }
 
     const now = performance.now();
     if (now < this.lockoutUntil) return;
 
-    // Symmetrical Detection:
-    // Forehand: Positive Z forward thrust >= +4.5 m/s²
-    // Backhand: Negative Z forward thrust <= -4.2 m/s²
-    if (az >= this.FOREHAND_Z_THRESH) {
-      this.lockoutUntil = now + 620; // Lock out the follow-through braking jerk
-      this.onSwing('SCREEN', az);
-    } else if (az <= this.BACKHAND_Z_THRESH) {
-      this.lockoutUntil = now + 620;
-      this.onSwing('BACK_PANEL', Math.abs(az));
+    const absZ = Math.abs(az);
+
+    // Dynamic threshold: 4.2 m/s² allows natural swings
+    if (absZ >= 4.2) {
+      this.lockoutUntil = now + 620; // Lock out deceleration
+
+      // Compare the detected sign against the calibrated hardware sign
+      const detectedSign = az > 0 ? 1 : -1;
+      let detectedFace = 'UNKNOWN';
+
+      if (detectedSign === this.forehandSign) {
+        detectedFace = 'SCREEN';
+      } else if (detectedSign === this.backhandSign) {
+        detectedFace = 'BACK_PANEL';
+      } else {
+        detectedFace = az > 0 ? 'SCREEN' : 'BACK_PANEL';
+      }
+
+      this.onSwing(detectedFace, absZ);
     }
   }
 }
@@ -570,7 +546,7 @@ class TennisMatchController {
     this.expectedDirection = null; // -1: Left (Backhand), 1: Right (Forehand)
     this.flightTime = 1.35;
     this.ballStartTime = 0;
-    this.hitMargin = 0.46; // 460ms sweet spot margin
+    this.hitMargin = 0.46;
     this.missTimeout = null;
     this.strikeZoneTimeout = null;
   }
@@ -662,7 +638,6 @@ class TennisMatchController {
       "PREPARE STANCE"
     );
 
-    // Gated Strike Zone: Only permit swings when the ball reaches hitting proximity
     const timeUntilStrikeZone = Math.max(0, (dur - this.hitMargin) * 1000);
     this.strikeZoneTimeout = setTimeout(() => {
       if (this.state === 'BALL_APPROACH') {
@@ -674,7 +649,6 @@ class TennisMatchController {
       }
     }, timeUntilStrikeZone);
 
-    // Ball Missed Timeout
     this.missTimeout = setTimeout(() => {
       if (this.state === 'BALL_APPROACH' || this.state === 'STRIKE_ZONE') {
         this.handleMiss("TOO LATE - MISSED BALL");
@@ -702,38 +676,34 @@ class TennisMatchController {
       return;
     }
 
-    // 2. Early Preparation Immunity Window
+    // 2. Early Window Immunity
     if (this.state === 'BALL_APPROACH') {
       const elapsed = (performance.now() - this.ballStartTime) / 1000;
       if (elapsed < (this.flightTime - this.hitMargin - 0.20)) {
-        // Player is getting into stance: ignore take-back motion safely
-        return;
+        return; // Ignore preparation wrist turn
       }
       this.audio.playWhiff();
       this.handleMiss("TOO EARLY!", `SWUNG AT ${elapsed.toFixed(2)}s`);
       return;
     }
 
-    // 3. Strike Zone Execution
+    // 3. Strike Zone
     if (this.state === 'STRIKE_ZONE') {
       clearTimeout(this.missTimeout);
       clearTimeout(this.strikeZoneTimeout);
       this.state = 'IDLE';
 
-      // Symmetrical Verification:
-      // Forehand (Right side) = Screen forward
-      // Backhand (Left side) = Back panel forward
       const targetFace = (this.expectedDirection === 1) ? 'SCREEN' : 'BACK_PANEL';
       if (face !== targetFace) {
         this.audio.playWhiff();
         const err = (this.expectedDirection === 1)
-          ? "WRONG FACE (NEED SCREEN FORWARD)"
-          : "WRONG FACE (NEED BACK PANEL FORWARD)";
+          ? "WRONG FACE (NEED SCREEN)"
+          : "WRONG FACE (NEED BACK PANEL)";
         this.handleMiss(err, `DETECTED: ${face}`);
         return;
       }
 
-      // Clean Hit Confirmed!
+      // Clean Hit Confirmed
       this.audio.playHit();
       this.updateHUD("CLEAN HIT!", `FORCE: ${forceVal.toFixed(1)} m/s² [${face}]`);
 
@@ -812,60 +782,85 @@ class TennisMatchController {
 }
 
 /**
- * 4. SYSTEM LIFECYCLE & LOBBY LOGIC
+ * 4. CALIBRATION WIZARD & INITIALIZATION
  */
 const audio = new AudioEngine();
 let match = null;
 let peer = null;
 let conn = null;
 
-// Symmetrical Motion Engine with Real-Time Calibration Feedback
-const motion = new SymmetricalMotionEngine(
-  (face, force) => {
-    if (match) match.onSwing(face, force);
-  },
-  (face, mag) => {
-    const badge = document.getElementById('stanceBadge');
-    const bar = document.getElementById('meterBar');
-    const pwrText = document.getElementById('testPwr');
-
-    if (badge && document.getElementById('lobby').style.display !== 'none') {
-      badge.innerText = face === 'FOREHAND' ? "FOREHAND STANCE (SCREEN OUTWARD)" : "BACKHAND STANCE (BACK PANEL OUTWARD)";
-      badge.className = "stance-badge " + (face === 'FOREHAND' ? "forehand" : "backhand");
-
-      if (pwrText) pwrText.innerText = mag.toFixed(1) + " m/s²";
-      if (bar) {
-        const pct = Math.min(100, (mag / 14.0) * 100);
-        bar.style.width = pct + "%";
-        bar.style.background = mag >= 4.5 ? "var(--cyan)" : "var(--green)";
-      }
-    }
-  }
-);
-
-// Activate sensors in lobby
-document.getElementById('btnInitSensors').addEventListener('click', async () => {
-  const ok = await motion.requestPermission();
-  if (ok) {
-    motion.start();
-    audio.init();
-    document.getElementById('btnInitSensors').style.display = 'none';
-    document.getElementById('statusText').innerText = "Sensors Active! Try swinging right & left above.";
-  } else {
-    alert("Motion sensor permission denied.");
-  }
+const motion = new HardwareCalibratedMotionEngine((face, force) => {
+  if (match) match.onSwing(face, force);
 });
 
-// Audio Stereo Verification
-document.getElementById('btnAudioTest').addEventListener('click', () => {
-  const btn = document.getElementById('btnAudioTest');
-  btn.innerText = "Playing in LEFT ear...";
-  audio.playTestTone(-1, 400, () => {
-    btn.innerText = "Playing in RIGHT ear...";
-    audio.playTestTone(1, 800, () => {
-      btn.innerText = "Verified! (Tap to replay)";
-    });
-  });
+// Update calibration status display in lobby
+function refreshCalibStatusUI() {
+  const el = document.getElementById('calibStatus');
+  if (motion.isCalibrated) {
+    el.innerHTML = `✅ <b>HARDWARE CALIBRATED:</b> Screen (+Z) / Back (-Z) mapped to your specific device.`;
+    el.style.color = "var(--green)";
+  } else {
+    el.innerHTML = `⚠️ <b>NOT CALIBRATED:</b> Tap below to run the 10-second calibration tool.`;
+    el.style.color = "var(--yellow)";
+  }
+}
+refreshCalibStatusUI();
+
+// Calibration Step Machine
+let calibStep = 0;
+let tempFhSign = 1;
+let tempBhSign = -1;
+
+document.getElementById('btnStartCalib').addEventListener('click', async () => {
+  const ok = await motion.requestPermission();
+  if (!ok) {
+    alert("Motion sensor access is required to calibrate.");
+    return;
+  }
+
+  calibStep = 1;
+  document.getElementById('calibModal').style.display = 'flex';
+  document.getElementById('modalStepTitle').innerText = "STEP 1 OF 2: FOREHAND";
+  document.getElementById('modalStepDesc').innerHTML = 
+    "Hold phone in your right hand.<br/><b>Swing forward naturally with the SCREEN facing forward.</b>";
+  document.getElementById('modalPwrMeter').innerText = "SWING!";
+
+  const calibListener = (e) => {
+    let az = 0;
+    if (e.acceleration && e.acceleration.z !== null && !isNaN(e.acceleration.z)) {
+      az = e.acceleration.z;
+    } else if (e.accelerationIncludingGravity && e.accelerationIncludingGravity.z !== null) {
+      az = e.accelerationIncludingGravity.z;
+    }
+
+    if (Math.abs(az) >= 4.5) {
+      if (calibStep === 1) {
+        // Record Forehand sign
+        tempFhSign = az > 0 ? 1 : -1;
+        calibStep = 2;
+
+        document.getElementById('modalStepTitle').innerText = "STEP 2 OF 2: BACKHAND";
+        document.getElementById('modalStepDesc').innerHTML = 
+          "Cross your arm across your chest so the wrist flips.<br/><b>Swing forward with the BACK PANEL facing forward.</b>";
+        document.getElementById('modalPwrMeter').innerText = "SWING!";
+
+      } else if (calibStep === 2) {
+        // Record Backhand sign
+        tempBhSign = az > 0 ? 1 : -1;
+        window.removeEventListener('devicemotion', calibListener, false);
+
+        motion.setCalibration(tempFhSign, tempBhSign);
+        document.getElementById('calibModal').style.display = 'none';
+        refreshCalibStatusUI();
+        alert("Calibration successful! Your phone's exact polarities have been saved.");
+      }
+    }
+  };
+
+  // Add temporary calibration listener with a small delay
+  setTimeout(() => {
+    window.addEventListener('devicemotion', calibListener, false);
+  }, 400);
 });
 
 function launchGame(title) {
@@ -881,13 +876,10 @@ function launchGame(title) {
   }
 }
 
-// 1. Wall Mode
+// 1. Solo Wall Mode
 document.getElementById('btnWall').addEventListener('click', async () => {
   const ok = await motion.requestPermission();
-  if (!ok) {
-    alert("Motion sensor access required.");
-    return;
-  }
+  if (!ok) return;
   launchGame("SOLO WALL PRACTICE");
   match = new TennisMatchController(audio, 'WALL', null, motion);
   match.start();
@@ -946,7 +938,7 @@ document.getElementById('btnJoin').addEventListener('click', async () => {
         if (d.type === 'BALL') match.receiveBall(d.direction, d.duration);
         else if (d.type === 'CMD_SERVE') {
           match.server = 1;
-          match.initiatePoint();
+          match.nextPoint();
         } else if (d.type === 'SYNC') {
           match.points = d.points;
           match.games = d.games;

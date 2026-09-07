@@ -1,1502 +1,982 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="mobile-web-app-capable" content="yes">
-    <title>AeroTennis — Visionless Interactive</title>
-    <style>
-        :root {
-            --neon-green: #00ff41;
-            --neon-cyan: #00e5ff;
-            --dark-bg: #0a0a0f;
-            --dark-surface: #111118;
-            --dark-border: #1e1e2e;
-            --text-primary: #e0e0e0;
-            --text-dim: #8888aa;
-            --danger: #ff3355;
-            --warning: #ffaa00;
-        }
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-            -webkit-touch-callout: none;
-            -webkit-user-select: none;
-            user-select: none;
-        }
-        html, body {
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            background: var(--dark-bg);
-            font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace;
-            color: var(--text-primary);
-            touch-action: manipulation;
-            overscroll-behavior: none;
-        }
-        body {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: fixed;
-            inset: 0;
-        }
-        #app {
-            width: 100%;
-            height: 100%;
-            max-width: 900px;
-            max-height: 1400px;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            background: var(--dark-bg);
-            border: 1px solid var(--dark-border);
-            overflow: hidden;
-        }
-        .screen {
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            height: 100%;
-            padding: 24px;
-            position: absolute;
-            top: 0;
-            left: 0;
-            background: var(--dark-bg);
-            z-index: 1;
-            transition: opacity 0.3s ease;
-        }
-        .screen.active {
-            display: flex;
-            z-index: 2;
-        }
-        .screen.hidden {
-            display: none;
-        }
-        .logo {
-            font-size: 2.4em;
-            font-weight: 800;
-            letter-spacing: 0.12em;
-            text-transform: uppercase;
-            color: var(--neon-green);
-            text-shadow: 0 0 20px rgba(0, 255, 65, 0.5), 0 0 60px rgba(0, 255, 65, 0.2);
-            margin-bottom: 8px;
-            text-align: center;
-            word-break: break-word;
-        }
-        .subtitle {
-            font-size: 0.85em;
-            color: var(--neon-cyan);
-            letter-spacing: 0.25em;
-            text-transform: uppercase;
-            margin-bottom: 32px;
-            text-align: center;
-            text-shadow: 0 0 15px rgba(0, 229, 255, 0.3);
-        }
-        .btn {
-            background: transparent;
-            border: 1.5px solid var(--neon-green);
-            color: var(--neon-green);
-            padding: 14px 28px;
-            margin: 8px 0;
-            font-size: 1em;
-            font-family: inherit;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            cursor: pointer;
-            transition: all 0.25s ease;
-            border-radius: 4px;
-            min-width: 220px;
-            text-align: center;
-            -webkit-user-select: none;
-            user-select: none;
-            touch-action: manipulation;
-        }
-        .btn:hover, .btn:active {
-            background: rgba(0, 255, 65, 0.12);
-            box-shadow: 0 0 25px rgba(0, 255, 65, 0.25);
-        }
-        .btn.cyan {
-            border-color: var(--neon-cyan);
-            color: var(--neon-cyan);
-        }
-        .btn.cyan:hover, .btn.cyan:active {
-            background: rgba(0, 229, 255, 0.12);
-            box-shadow: 0 0 25px rgba(0, 229, 255, 0.25);
-        }
-        .btn.danger {
-            border-color: var(--danger);
-            color: var(--danger);
-        }
-        .btn.danger:hover {
-            background: rgba(255, 51, 85, 0.12);
-            box-shadow: 0 0 25px rgba(255, 51, 85, 0.25);
-        }
-        .btn.warning {
-            border-color: var(--warning);
-            color: var(--warning);
-        }
-        .btn.warning:hover {
-            background: rgba(255, 170, 0, 0.12);
-            box-shadow: 0 0 25px rgba(255, 170, 0, 0.25);
-        }
-        .btn:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-            pointer-events: none;
-        }
-        .btn.small {
-            padding: 10px 18px;
-            font-size: 0.85em;
-            min-width: 140px;
-            margin: 4px 4px;
-        }
-        .input-field {
-            background: var(--dark-surface);
-            border: 1.5px solid var(--dark-border);
-            color: var(--text-primary);
-            padding: 12px 16px;
-            font-size: 1.1em;
-            font-family: inherit;
-            letter-spacing: 0.2em;
-            text-align: center;
-            border-radius: 4px;
-            margin: 8px 0;
-            width: 220px;
-            outline: none;
-            transition: border-color 0.3s;
-            -webkit-user-select: text;
-            user-select: text;
-        }
-        .input-field:focus {
-            border-color: var(--neon-cyan);
-        }
-        .code-display {
-            font-size: 3em;
-            letter-spacing: 0.4em;
-            color: var(--neon-cyan);
-            text-shadow: 0 0 30px rgba(0, 229, 255, 0.6);
-            margin: 16px 0;
-            font-weight: 700;
-            text-align: center;
-        }
-        .status-text {
-            font-size: 0.9em;
-            color: var(--text-dim);
-            letter-spacing: 0.06em;
-            margin: 8px 0;
-            text-align: center;
-            line-height: 1.6;
-        }
-        .status-text.highlight {
-            color: var(--neon-green);
-        }
-        .status-text.warning {
-            color: var(--warning);
-        }
-        .status-text.danger {
-            color: var(--danger);
-        }
-        .scoreboard {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            width: 100%;
-            padding: 12px 20px;
-            background: var(--dark-surface);
-            border-bottom: 1px solid var(--dark-border);
-            flex-shrink: 0;
-            z-index: 5;
-        }
-        .score-player {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-        }
-        .score-player .name {
-            font-size: 0.7em;
-            letter-spacing: 0.15em;
-            text-transform: uppercase;
-            color: var(--text-dim);
-        }
-        .score-player .pts {
-            font-size: 2em;
-            font-weight: 700;
-            color: var(--neon-green);
-            text-shadow: 0 0 15px rgba(0, 255, 65, 0.4);
-        }
-        .score-player .games {
-            font-size: 0.8em;
-            color: var(--neon-cyan);
-            letter-spacing: 0.1em;
-        }
-        .score-divider {
-            font-size: 1.6em;
-            color: var(--text-dim);
-            font-weight: 300;
-            letter-spacing: 0.2em;
-        }
-        .serve-indicator {
-            font-size: 0.65em;
-            letter-spacing: 0.2em;
-            text-transform: uppercase;
-            color: var(--warning);
-            margin-top: 2px;
-        }
-        .game-area {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            overflow: hidden;
-        }
-        .game-hint {
-            font-size: 0.75em;
-            color: var(--text-dim);
-            letter-spacing: 0.2em;
-            text-transform: uppercase;
-            text-align: center;
-            padding: 16px;
-            opacity: 0;
-            transition: opacity 0.5s;
-        }
-        .game-hint.visible {
-            opacity: 1;
-        }
-        .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.85);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 100;
-            padding: 20px;
-            animation: fadeIn 0.3s ease;
-        }
-        .modal-box {
-            background: var(--dark-surface);
-            border: 1.5px solid var(--neon-cyan);
-            border-radius: 8px;
-            padding: 28px 24px;
-            max-width: 400px;
-            width: 100%;
-            text-align: center;
-            box-shadow: 0 0 50px rgba(0, 229, 255, 0.2);
-        }
-        .modal-box h2 {
-            color: var(--neon-cyan);
-            font-size: 1.2em;
-            letter-spacing: 0.1em;
-            margin-bottom: 12px;
-            text-transform: uppercase;
-        }
-        .modal-box p {
-            color: var(--text-primary);
-            font-size: 0.9em;
-            line-height: 1.7;
-            margin-bottom: 16px;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: scale(0.95); }
-            to { opacity: 1; transform: scale(1); }
-        }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.3; }
-        }
-        .pulse {
-            animation: pulse 1.5s ease-in-out infinite;
-        }
-        @media (orientation: portrait) {
-            .rotate-warning {
-                display: flex !important;
-                position: fixed;
-                inset: 0;
-                background: var(--dark-bg);
-                z-index: 999;
-                align-items: center;
-                justify-content: center;
-                flex-direction: column;
-                gap: 16px;
-                font-size: 1.1em;
-                letter-spacing: 0.1em;
-                text-align: center;
-                padding: 30px;
-            }
-            .rotate-warning .icon {
-                font-size: 3em;
-                animation: pulse 1.5s ease-in-out infinite;
-            }
-            #app {
-                display: none;
-            }
-        }
-        @media (orientation: landscape) {
-            .rotate-warning {
-                display: none !important;
-            }
-        }
-        .hidden {
-            display: none !important;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>AeroTennis | Precision Motion Tennis</title>
+
+  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+
+  <style>
+    :root {
+      --bg: #04070c;
+      --panel: #0a101d;
+      --cyan: #00f3ff;
+      --green: #39ff14;
+      --red: #ff0055;
+      --yellow: #ffd700;
+      --dim: #62758c;
+      --border: #142236;
+      --font: 'Courier New', Courier, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: none;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: #fff;
+      font-family: var(--font);
+      height: 100vh;
+      width: 100vw;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .container {
+      width: 94%;
+      max-width: 440px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 0 30px rgba(0, 243, 255, 0.12);
+      max-height: 96vh;
+      overflow-y: auto;
+    }
+
+    h1 {
+      font-size: 2.1rem;
+      letter-spacing: 4px;
+      color: var(--cyan);
+      text-shadow: 0 0 14px rgba(0, 243, 255, 0.5);
+      margin-bottom: 2px;
+    }
+
+    .sub {
+      font-size: 0.70rem;
+      color: var(--green);
+      letter-spacing: 2px;
+      margin-bottom: 12px;
+    }
+
+    /* Live Racket Sensor Diagnostic */
+    .diagnostic-box {
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 12px;
+      text-align: left;
+    }
+
+    .diag-title {
+      font-size: 0.72rem;
+      color: var(--yellow);
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+      font-weight: bold;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .racket-state {
+      padding: 8px;
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 0.85rem;
+      letter-spacing: 1px;
+      text-align: center;
+      width: 100%;
+      margin-bottom: 8px;
+      background: #101622;
+      border: 1px solid #223247;
+      color: var(--dim);
+      transition: all 0.15s ease;
+    }
+
+    .racket-state.forehand {
+      background: rgba(57, 255, 20, 0.18);
+      border-color: var(--green);
+      color: var(--green);
+      box-shadow: 0 0 12px rgba(57, 255, 20, 0.3);
+    }
+
+    .racket-state.backhand {
+      background: rgba(0, 243, 255, 0.18);
+      border-color: var(--cyan);
+      color: var(--cyan);
+      box-shadow: 0 0 12px rgba(0, 243, 255, 0.3);
+    }
+
+    .meter-container {
+      width: 100%;
+      height: 10px;
+      background: #111822;
+      border-radius: 5px;
+      overflow: hidden;
+      margin-top: 4px;
+      border: 1px solid #223147;
+    }
+
+    .meter-bar {
+      height: 100%;
+      width: 0%;
+      background: var(--green);
+      transition: width 0.05s linear;
+    }
+
+    .audio-test-box {
+      background: rgba(255, 215, 0, 0.06);
+      border: 1px solid var(--yellow);
+      border-radius: 6px;
+      padding: 8px;
+      margin-bottom: 12px;
+    }
+
+    .status-panel {
+      font-size: 0.80rem;
+      color: var(--dim);
+      border: 1px dashed var(--border);
+      padding: 8px;
+      border-radius: 6px;
+      margin-bottom: 10px;
+      min-height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn {
+      width: 100%;
+      background: transparent;
+      border: 1px solid var(--cyan);
+      color: var(--cyan);
+      font-family: inherit;
+      padding: 12px;
+      font-size: 0.90rem;
+      font-weight: bold;
+      letter-spacing: 2px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin: 4px 0;
+    }
+    .btn:active {
+      background: var(--cyan);
+      color: var(--bg);
+    }
+
+    .btn-green {
+      border-color: var(--green);
+      color: var(--green);
+    }
+    .btn-green:active {
+      background: var(--green);
+      color: var(--bg);
+    }
+
+    .btn-yellow {
+      border-color: var(--yellow);
+      color: var(--yellow);
+      font-size: 0.75rem;
+      padding: 6px;
+    }
+
+    .code-input {
+      width: 100%;
+      padding: 10px;
+      background: rgba(0,0,0,0.5);
+      border: 1px solid var(--border);
+      color: var(--green);
+      font-size: 1.10rem;
+      font-family: inherit;
+      text-align: center;
+      letter-spacing: 4px;
+      border-radius: 6px;
+      margin: 5px 0;
+      text-transform: uppercase;
+      outline: none;
+    }
+    .code-input:focus { border-color: var(--cyan); }
+
+    /* IN-GAME MINIMALIST CYBER HUD */
+    #hud {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: #000;
+      z-index: 100;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      padding: 44px 20px;
+      text-align: center;
+    }
+
+    .hud-header {
+      font-size: 0.85rem;
+      letter-spacing: 3px;
+      color: var(--dim);
+    }
+
+    .hud-score {
+      font-size: 2.8rem;
+      letter-spacing: 6px;
+      color: var(--cyan);
+      text-shadow: 0 0 20px var(--cyan);
+      margin: 8px 0;
+    }
+
+    .hud-turn {
+      font-size: 1rem;
+      color: var(--green);
+      letter-spacing: 2px;
+    }
+
+    .hud-feedback {
+      font-size: 1.4rem;
+      letter-spacing: 2px;
+      color: #fff;
+      min-height: 60px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-transform: uppercase;
+    }
+
+    .hud-telemetry {
+      font-size: 0.75rem;
+      color: var(--dim);
+      margin-top: 4px;
+      letter-spacing: 1px;
+    }
+
+    .hud-quit {
+      border: 1px solid var(--red);
+      color: var(--red);
+      background: transparent;
+      padding: 10px 24px;
+      font-family: inherit;
+      font-size: 0.85rem;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
-    <div class="rotate-warning">
-        <div class="icon">📱</div>
-        <div>Please rotate your device<br>to <span style="color:var(--neon-green);font-weight:700;">LANDSCAPE</span> mode<br><br><span style="font-size:0.7em;color:var(--text-dim);">Hold your phone like a tennis racket</span></div>
-    </div>
-    <div id="app">
-        <div class="scoreboard hidden" id="scoreboard">
-            <div class="score-player">
-                <span class="name" id="sbPlayerName">YOU</span>
-                <span class="pts" id="sbPlayerPts">0</span>
-                <span class="games" id="sbPlayerGames">Games: 0</span>
-            </div>
-            <div style="display:flex;flex-direction:column;align-items:center;">
-                <span class="score-divider">—</span>
-                <span class="serve-indicator" id="sbServeIndicator"></span>
-            </div>
-            <div class="score-player">
-                <span class="name" id="sbOppName">OPPONENT</span>
-                <span class="pts" id="sbOppPts">0</span>
-                <span class="games" id="sbOppGames">Games: 0</span>
-            </div>
-        </div>
-        <div class="game-area" id="gameArea">
-            <div class="game-hint" id="gameHint">🎾 LISTEN FOR THE BALL</div>
-        </div>
-        <div class="screen active" id="screenMenu">
-            <div class="logo">AeroTennis</div>
-            <div class="subtitle">Visionless Interactive</div>
-            <button class="btn cyan" id="btnPractice">🎯 Practice Mode</button>
-            <button class="btn" id="btnCreate">➕ Create Match</button>
-            <button class="btn" id="btnJoin">🔗 Join Match</button>
-            <div class="status-text" id="menuStatus" style="margin-top:16px;"></div>
-        </div>
-        <div class="screen" id="screenPractice">
-            <div class="logo" style="font-size:1.5em;">Practice — Wall Mode</div>
-            <div class="status-text highlight" id="practiceStatus">Press "Serve" to begin</div>
-            <button class="btn cyan" id="btnServePractice">🎾 Serve</button>
-            <button class="btn small warning" id="btnPracticeBack">← Back to Menu</button>
-        </div>
-        <div class="screen" id="screenCreate">
-            <div class="logo" style="font-size:1.4em;">Create Match</div>
-            <div class="status-text">Share this code with your opponent:</div>
-            <div class="code-display" id="createCodeDisplay">------</div>
-            <div class="status-text highlight" id="createWaitStatus">Waiting for opponent...</div>
-            <button class="btn small danger" id="btnCreateCancel">Cancel</button>
-        </div>
-        <div class="screen" id="screenJoin">
-            <div class="logo" style="font-size:1.4em;">Join Match</div>
-            <div class="status-text">Enter the 6-digit code:</div>
-            <input class="input-field" id="joinCodeInput" type="text" maxlength="6" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="••••••">
-            <button class="btn" id="btnJoinConnect">Connect</button>
-            <div class="status-text danger" id="joinError" style="min-height:1.5em;"></div>
-            <button class="btn small warning" id="btnJoinBack">← Back to Menu</button>
-        </div>
-        <div class="modal-overlay hidden" id="modalOverlay">
-            <div class="modal-box" id="modalBox">
-                <h2 id="modalTitle">Notice</h2>
-                <p id="modalText">...</p>
-                <button class="btn" id="modalConfirm">OK</button>
-            </div>
-        </div>
+
+  <div class="container" id="lobby">
+    <h1>AEROTENNIS</h1>
+    <div class="sub">PlayStation Move Kinematics</div>
+
+    <!-- Live Grip & Racket Face Monitor -->
+    <div class="diagnostic-box">
+      <div class="diag-title">
+        <span>RACKET FACE SENSOR</span>
+        <span id="testPwr">0.0 m/s²</span>
+      </div>
+      <div class="racket-state" id="racketState">TAP "ACTIVATE MOTION SENSORS"</div>
+      <div class="meter-container">
+        <div class="meter-bar" id="meterBar"></div>
+      </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
-    <script>
-        (function() {
-            'use strict';
+    <button class="btn btn-yellow" id="btnInitSensors">1. ACTIVATE MOTION SENSORS</button>
 
-            // ============================================================
-            // CONSTANTS
-            // ============================================================
-            const BALL_TRAVEL_TIME_MS = 2200;
-            const SWING_WINDOW_MS = 180;
-            const SWING_ACCEL_THRESHOLD = 3.5;
-            const SWING_Z_THRESHOLD = 1.8;
-            const SWING_COOLDOWN_MS = 400;
-            const AUDIO_RAMP_START = 0.05;
-            const AUDIO_RAMP_PEAK = 1.0;
-            const ROOM_CODE_LENGTH = 6;
+    <div class="audio-test-box">
+      <div style="font-size:0.72rem; color:var(--yellow); margin-bottom:4px;">
+        🎧 <b>STEREO EARPHONES TEST</b>
+      </div>
+      <button class="btn btn-yellow" id="btnAudioTest">Play Left/Right Audio Channels</button>
+    </div>
 
-            // ============================================================
-            // STATE
-            // ============================================================
-            const state = {
-                screen: 'menu',
-                mode: null,
-                isHost: false,
-                isServing: false,
-                serveNumber: 0,
-                gamesPlayed: 0,
-                ballState: null,
-                lastSwingTime: 0,
-                playerPoints: 0,
-                opponentPoints: 0,
-                playerGames: 0,
-                opponentGames: 0,
-                isDeuce: false,
-                advantage: null,
-                peer: null,
-                connection: null,
-                roomCode: null,
-                opponentConnected: false,
-                practiceStreak: 0,
-                practiceBest: 0,
-                audioCtx: null,
-                ballAudioNodes: null,
-                motionPermissionGranted: false,
-                wakeLock: null,
-                ballIncoming: false,
-                ballMissTimeout: null,
-            };
+    <div class="status-panel" id="statusText">Hold Phone horizontally in Right Hand</div>
 
-            // ============================================================
-            // DOM REFS
-            // ============================================================
-            const $ = (id) => document.getElementById(id);
-            const screens = {
-                menu: $('screenMenu'),
-                practice: $('screenPractice'),
-                create: $('screenCreate'),
-                join: $('screenJoin'),
-            };
-            const scoreboard = $('scoreboard');
-            const gameArea = $('gameArea');
-            const gameHint = $('gameHint');
-            const sbPlayerName = $('sbPlayerName');
-            const sbPlayerPts = $('sbPlayerPts');
-            const sbPlayerGames = $('sbPlayerGames');
-            const sbOppName = $('sbOppName');
-            const sbOppPts = $('sbOppPts');
-            const sbOppGames = $('sbOppGames');
-            const sbServeIndicator = $('sbServeIndicator');
-            const menuStatus = $('menuStatus');
-            const practiceStatus = $('practiceStatus');
-            const createCodeDisplay = $('createCodeDisplay');
-            const createWaitStatus = $('createWaitStatus');
-            const joinCodeInput = $('joinCodeInput');
-            const joinError = $('joinError');
-            const modalOverlay = $('modalOverlay');
-            const modalTitle = $('modalTitle');
-            const modalText = $('modalText');
-            const modalConfirm = $('modalConfirm');
+    <button class="btn btn-green" id="btnWall">Solo Wall Practice</button>
+    <button class="btn" id="btnCreate">Create 2-Player Match</button>
+    <input type="text" id="roomInput" class="code-input" placeholder="ROOM CODE" maxlength="6" />
+    <button class="btn" id="btnJoin">Join Match</button>
+  </div>
 
-            // ============================================================
-            // HELPER FUNCTIONS
-            // ============================================================
-            function showScreen(name) {
-                Object.keys(screens).forEach(k => {
-                    screens[k].classList.remove('active');
-                    screens[k].classList.add('hidden');
-                });
-                screens[name].classList.remove('hidden');
-                screens[name].classList.add('active');
-                state.screen = name;
-                if (name === 'playing') {
-                    scoreboard.classList.remove('hidden');
-                    requestWakeLock();
-                } else {
-                    scoreboard.classList.add('hidden');
-                    if (name !== 'practice') releaseWakeLock();
-                }
-                if (name === 'practice') {
-                    requestWakeLock();
-                }
-            }
+  <!-- IN-GAME HUD -->
+  <div id="hud">
+    <div>
+      <div class="hud-header" id="hudMode">ARENA</div>
+      <div class="hud-score" id="hudScore">0 - 0</div>
+      <div class="hud-turn" id="hudServer">INITIALIZING</div>
+    </div>
+    <div class="hud-feedback">
+      <div id="hudFeedbackMain">HOLD READY</div>
+      <div class="hud-telemetry" id="hudTelemetry">STANDBY</div>
+    </div>
+    <button class="hud-quit" id="btnQuit">EXIT MATCH</button>
+  </div>
 
-            function showModal(title, text, callback) {
-                modalTitle.textContent = title;
-                modalText.textContent = text;
-                modalOverlay.classList.remove('hidden');
-                modalConfirm.onclick = () => {
-                    modalOverlay.classList.add('hidden');
-                    if (callback) callback();
-                };
-            }
+<script>
+/**
+ * 1. REALISTIC AUDIO SYNTHESIZER
+ * Accurate seam whistle, Doppler pitch rise, and stereo isolation.
+ */
+class AudioEngine {
+  constructor() {
+    this.ctx = null;
+  }
 
-            function generateRoomCode() {
-                return Math.floor(100000 + Math.random() * 900000).toString();
-            }
+  init() {
+    if (!this.ctx) {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      this.ctx = new AudioCtx();
+    }
+    if (this.ctx.state === 'suspended') {
+      this.ctx.resume();
+    }
+  }
 
-            function getPointsLabel(p) {
-                switch (p) {
-                    case 0: return 'Love';
-                    case 1: return '15';
-                    case 2: return '30';
-                    case 3: return '40';
-                    case 4: return 'Adv';
-                    default: return '?';
-                }
-            }
+  playTestTone(dir, freq, onDone) {
+    this.init();
+    const t0 = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    const panner = this.ctx.createStereoPanner();
 
-            function getFullScoreString() {
-                if (state.isDeuce) {
-                    if (state.advantage === 'player') return 'Adv Player';
-                    if (state.advantage === 'opponent') return 'Adv Opp';
-                    return 'Deuce';
-                }
-                return getPointsLabel(state.playerPoints) + ' - ' + getPointsLabel(state.opponentPoints);
-            }
+    osc.frequency.setValueAtTime(freq, t0);
+    panner.pan.setValueAtTime(dir, t0);
+    gain.gain.setValueAtTime(0.3, t0);
+    gain.gain.exponentialRampToValueAtTime(0.001, t0 + 0.35);
 
-            function formatAnnouncement() {
-                let str = '';
-                if (state.isDeuce) {
-                    if (state.advantage === 'player') str = 'Advantage Player. ';
-                    else if (state.advantage === 'opponent') str = 'Advantage Opponent. ';
-                    else str = 'Deuce. ';
-                } else {
-                    str = getPointsLabel(state.playerPoints) + ' - ' + getPointsLabel(state.opponentPoints) + '. ';
-                }
-                const server = state.isServing ? 'Player 1' : 'Player 2';
-                str += server + ' to serve.';
-                return str;
-            }
+    osc.connect(gain);
+    gain.connect(panner);
+    panner.connect(this.ctx.destination);
 
-            function updateScoreboard() {
-                sbPlayerPts.textContent = getPointsLabel(state.playerPoints);
-                sbOppPts.textContent = getPointsLabel(state.opponentPoints);
-                sbPlayerGames.textContent = 'Games: ' + state.playerGames;
-                sbOppGames.textContent = 'Games: ' + state.opponentGames;
-                const serverStr = state.isServing ? '🎾 YOU serve' : '🎾 OPP serves';
-                sbServeIndicator.textContent = serverStr;
-                if (state.mode === 'multiplayer') {
-                    sbPlayerName.textContent = 'YOU';
-                    sbOppName.textContent = 'OPPONENT';
-                } else {
-                    sbPlayerName.textContent = 'YOU';
-                    sbOppName.textContent = 'WALL';
-                }
-            }
+    osc.start(t0);
+    osc.stop(t0 + 0.36);
+    setTimeout(onDone, 400);
+  }
 
-            function resetPoint() {
-                state.ballIncoming = false;
-                state.ballState = null;
-                gameHint.classList.remove('visible');
-                gameHint.textContent = '🎾 LISTEN FOR THE BALL';
-                if (state.ballMissTimeout) {
-                    clearTimeout(state.ballMissTimeout);
-                    state.ballMissTimeout = null;
-                }
-            }
+  playBallApproach(direction, duration) {
+    if (!this.ctx) return;
+    const t0 = this.ctx.currentTime;
+    const tEnd = t0 + duration;
 
-            // ============================================================
-            // AUDIO ENGINE
-            // ============================================================
-            const AudioEngine = {
-                init() {
-                    if (state.audioCtx) return;
-                    try {
-                        state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                    } catch (e) {
-                        console.error('AudioContext init failed:', e);
-                        return;
-                    }
-                    if (state.audioCtx.state === 'suspended') {
-                        state.audioCtx.resume().catch(() => {});
-                    }
-                },
-                resume() {
-                    if (state.audioCtx && state.audioCtx.state === 'suspended') {
-                        state.audioCtx.resume().catch(() => {});
-                    }
-                },
-                createBallWhoosh(side, durationMs) {
-                    const ctx = state.audioCtx;
-                    if (!ctx) return null;
-                    const bufferSize = ctx.sampleRate * (durationMs / 1000);
-                    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-                    const data = buffer.getChannelData(0);
-                    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-                    const noise = ctx.createBufferSource();
-                    noise.buffer = buffer;
-                    noise.loop = false;
-                    const filter = ctx.createBiquadFilter();
-                    filter.type = 'bandpass';
-                    filter.frequency.setValueAtTime(600, ctx.currentTime);
-                    filter.frequency.exponentialRampToValueAtTime(1800, ctx.currentTime + durationMs / 1000 * 0.7);
-                    filter.frequency.exponentialRampToValueAtTime(400, ctx.currentTime + durationMs / 1000);
-                    filter.Q.value = 1.2;
-                    const gain = ctx.createGain();
-                    gain.gain.setValueAtTime(AUDIO_RAMP_START, ctx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(AUDIO_RAMP_PEAK, ctx.currentTime + durationMs / 1000 * 0.85);
-                    gain.gain.exponentialRampToValueAtTime(AUDIO_RAMP_START * 0.3, ctx.currentTime + durationMs / 1000 * 1.05);
-                    gain.gain.linearRampToValueAtTime(0.0001, ctx.currentTime + durationMs / 1000 * 1.15);
-                    const panner = ctx.createStereoPanner();
-                    panner.pan.value = side === 'left' ? -0.85 : 0.85;
-                    noise.connect(filter);
-                    filter.connect(gain);
-                    gain.connect(panner);
-                    panner.connect(ctx.destination);
-                    noise.start(ctx.currentTime);
-                    noise.stop(ctx.currentTime + durationMs / 1000 * 1.2);
-                    return { noise, filter, gain, panner, startTime: Date.now() };
-                },
-                createBallHitSound() {
-                    const ctx = state.audioCtx;
-                    if (!ctx) return;
-                    const osc = ctx.createOscillator();
-                    const gain = ctx.createGain();
-                    const filter = ctx.createBiquadFilter();
-                    filter.type = 'highpass';
-                    filter.frequency.value = 800;
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(1800, ctx.currentTime);
-                    osc.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + 0.06);
-                    gain.gain.setValueAtTime(0.7, ctx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
-                    osc.connect(filter);
-                    filter.connect(gain);
-                    gain.connect(ctx.destination);
-                    osc.start(ctx.currentTime);
-                    osc.stop(ctx.currentTime + 0.1);
-                    const bufSize = ctx.sampleRate * 0.05;
-                    const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
-                    const d = buf.getChannelData(0);
-                    for (let i = 0; i < bufSize; i++) d[i] = Math.random() * 2 - 1;
-                    const noise = ctx.createBufferSource();
-                    noise.buffer = buf;
-                    const nFilter = ctx.createBiquadFilter();
-                    nFilter.type = 'bandpass';
-                    nFilter.frequency.value = 1200;
-                    nFilter.Q.value = 2;
-                    const nGain = ctx.createGain();
-                    nGain.gain.setValueAtTime(0.5, ctx.currentTime);
-                    nGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.04);
-                    noise.connect(nFilter);
-                    nFilter.connect(nGain);
-                    nGain.connect(ctx.destination);
-                    noise.start(ctx.currentTime);
-                    noise.stop(ctx.currentTime + 0.06);
-                },
-                createMissSound(side) {
-                    const ctx = state.audioCtx;
-                    if (!ctx) return;
-                    const bufSize = ctx.sampleRate * 0.6;
-                    const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
-                    const d = buf.getChannelData(0);
-                    for (let i = 0; i < bufSize; i++) d[i] = Math.random() * 2 - 1;
-                    const noise = ctx.createBufferSource();
-                    noise.buffer = buf;
-                    const filter = ctx.createBiquadFilter();
-                    filter.type = 'bandpass';
-                    filter.frequency.value = 900;
-                    filter.Q.value = 1;
-                    const gain = ctx.createGain();
-                    gain.gain.setValueAtTime(0.9, ctx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.55);
-                    const panner = ctx.createStereoPanner();
-                    panner.pan.value = side === 'left' ? -0.8 : 0.8;
-                    noise.connect(filter);
-                    filter.connect(gain);
-                    gain.connect(panner);
-                    panner.connect(ctx.destination);
-                    noise.start(ctx.currentTime);
-                    noise.stop(ctx.currentTime + 0.6);
-                },
-                speak(text) {
-                    if (!('speechSynthesis' in window)) return;
-                    try {
-                        window.speechSynthesis.cancel();
-                        const utter = new SpeechSynthesisUtterance(text);
-                        utter.rate = 0.95;
-                        utter.pitch = 1.05;
-                        utter.volume = 1.0;
-                        const voices = window.speechSynthesis.getVoices();
-                        const preferred = voices.find(v => v.lang.startsWith('en') && v.name.includes('Google')) ||
-                            voices.find(v => v.lang.startsWith('en')) || voices[0];
-                        if (preferred) utter.voice = preferred;
-                        window.speechSynthesis.speak(utter);
-                    } catch (e) {
-                        console.warn('Speech synthesis failed:', e);
-                    }
-                },
-                stopBallAudio() {
-                    if (state.ballAudioNodes) {
-                        try {
-                            state.ballAudioNodes.noise.stop();
-                            state.ballAudioNodes.gain.disconnect();
-                            state.ballAudioNodes.filter.disconnect();
-                            state.ballAudioNodes.panner.disconnect();
-                        } catch (e) {}
-                        state.ballAudioNodes = null;
-                    }
-                },
-                playBallApproach(side, durationMs) {
-                    this.stopBallAudio();
-                    this.resume();
-                    if (!state.audioCtx) this.init();
-                    if (!state.audioCtx) return;
-                    this.resume();
-                    state.ballAudioNodes = this.createBallWhoosh(side, durationMs);
-                },
-                playHitSound() {
-                    this.resume();
-                    if (!state.audioCtx) this.init();
-                    if (!state.audioCtx) return;
-                    this.resume();
-                    this.createBallHitSound();
-                },
-                playMissSound(side) {
-                    this.resume();
-                    if (!state.audioCtx) this.init();
-                    if (!state.audioCtx) return;
-                    this.resume();
-                    this.createMissSound(side);
-                },
-            };
+    const bufferSize = Math.floor(this.ctx.sampleRate * duration);
+    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = Math.random() * 2 - 1;
+    }
 
-            // ============================================================
-            // MOTION DETECTION
-            // ============================================================
-            const MotionDetection = {
-                enabled: false,
-                lastAccelMagnitude: 0,
-                lastZ: 0,
-                swingCallback: null,
-                _onMotion: null,
+    const noise = this.ctx.createBufferSource();
+    noise.buffer = buffer;
 
-                init(callback) {
-                    this.swingCallback = callback || null;
-                    this._onMotion = (event) => this._handleMotion(event);
-                    this._startListeners();
-                },
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(360, t0);
+    filter.frequency.exponentialRampToValueAtTime(940, tEnd);
+    filter.Q.setValueAtTime(4.0, t0);
 
-                _startListeners() {
-                    window.addEventListener('devicemotion', this._onMotion, { passive: true });
-                },
+    const gain = this.ctx.createGain();
+    gain.gain.setValueAtTime(0.01, t0);
+    gain.gain.exponentialRampToValueAtTime(1.0, tEnd);
 
-                _handleMotion(event) {
-                    if (!event || !event.acceleration) return;
-                    const ax = event.acceleration.x || 0;
-                    const ay = event.acceleration.y || 0;
-                    const az = event.acceleration.z || 0;
-                    const magnitude = Math.sqrt(ax * ax + ay * ay + az * az);
-                    const crossedUp = magnitude > SWING_ACCEL_THRESHOLD && this.lastAccelMagnitude <= SWING_ACCEL_THRESHOLD;
-                    const now = Date.now();
-                    if (crossedUp && (now - state.lastSwingTime) > SWING_COOLDOWN_MS) {
-                        state.lastSwingTime = now;
-                        const zComp = az;
-                        let swingType = 'unknown';
-                        if (zComp > SWING_Z_THRESHOLD) swingType = 'forehand';
-                        else if (zComp < -SWING_Z_THRESHOLD) swingType = 'backhand';
-                        else swingType = 'edge';
-                        if (this.swingCallback) {
-                            this.swingCallback({
-                                type: swingType,
-                                zComponent: zComp,
-                                magnitude: magnitude,
-                                timestamp: now,
-                            });
-                        }
-                    }
-                    this.lastAccelMagnitude = magnitude;
-                    this.lastZ = az;
-                },
+    const panner = this.ctx.createStereoPanner();
+    panner.pan.setValueAtTime(direction, t0);
 
-                stop() {
-                    window.removeEventListener('devicemotion', this._onMotion);
-                    this.enabled = false;
-                },
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(panner);
+    panner.connect(this.ctx.destination);
 
-                start() {
-                    this.enabled = true;
-                },
-            };
+    noise.start(t0);
+    noise.stop(tEnd + 0.05);
+  }
 
-            // ============================================================
-            // GAME LOGIC
-            // ============================================================
-            function startBallApproach(side) {
-                if (state.ballIncoming) return;
-                state.ballIncoming = true;
-                const now = Date.now();
-                state.ballState = {
-                    side: side,
-                    startTime: now,
-                    arrivalTime: now + BALL_TRAVEL_TIME_MS,
-                    expectedSwing: side === 'left' ? 'backhand' : 'forehand',
-                };
-                AudioEngine.playBallApproach(side, BALL_TRAVEL_TIME_MS);
-                gameHint.textContent = '🎾 LISTEN';
-                gameHint.classList.add('visible');
+  playHit() {
+    if (!this.ctx) return;
+    const t0 = this.ctx.currentTime;
 
-                state.ballMissTimeout = setTimeout(() => {
-                    if (state.ballIncoming && state.ballState) {
-                        const missSide = state.ballState.side;
-                        state.ballIncoming = false;
-                        state.ballState = null;
-                        AudioEngine.stopBallAudio();
-                        AudioEngine.playMissSound(missSide);
-                        gameHint.classList.remove('visible');
-                        gameHint.textContent = '⏱️ TOO LATE';
-                        gameHint.classList.add('visible');
-                        setTimeout(() => gameHint.classList.remove('visible'), 800);
-                        onMiss();
-                    }
-                }, BALL_TRAVEL_TIME_MS + SWING_WINDOW_MS + 100);
-            }
+    const osc = this.ctx.createOscillator();
+    const g = this.ctx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(650, t0);
+    osc.frequency.exponentialRampToValueAtTime(120, t0 + 0.08);
+    g.gain.setValueAtTime(1.0, t0);
+    g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.08);
+    osc.connect(g);
+    g.connect(this.ctx.destination);
+    osc.start(t0);
+    osc.stop(t0 + 0.09);
 
-            function handleSwing(swingData) {
-                if (!state.ballIncoming || !state.ballState) return;
+    const pop = this.ctx.createOscillator();
+    const pg = this.ctx.createGain();
+    pop.type = 'sine';
+    pop.frequency.setValueAtTime(160, t0);
+    pop.frequency.linearRampToValueAtTime(40, t0 + 0.05);
+    pg.gain.setValueAtTime(0.8, t0);
+    pg.gain.linearRampToValueAtTime(0.001, t0 + 0.05);
+    pop.connect(pg);
+    pg.connect(this.ctx.destination);
+    pop.start(t0);
+    pop.stop(t0 + 0.06);
+  }
 
-                if (state.ballMissTimeout) {
-                    clearTimeout(state.ballMissTimeout);
-                    state.ballMissTimeout = null;
-                }
+  playWhiff() {
+    if (!this.ctx) return;
+    const t0 = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const g = this.ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(280, t0);
+    osc.frequency.exponentialRampToValueAtTime(70, t0 + 0.16);
+    g.gain.setValueAtTime(0.35, t0);
+    g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.16);
+    osc.connect(g);
+    g.connect(this.ctx.destination);
+    osc.start(t0);
+    osc.stop(t0 + 0.17);
+  }
 
-                const ball = state.ballState;
-                const now = Date.now();
-                const timeDiff = now - ball.arrivalTime;
-                const isInTimeWindow = Math.abs(timeDiff) <= SWING_WINDOW_MS;
+  playBounce() {
+    if (!this.ctx) return;
+    const t0 = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const g = this.ctx.createGain();
+    osc.frequency.setValueAtTime(160, t0);
+    osc.frequency.exponentialRampToValueAtTime(40, t0 + 0.12);
+    g.gain.setValueAtTime(0.6, t0);
+    g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.12);
+    osc.connect(g);
+    g.connect(this.ctx.destination);
+    osc.start(t0);
+    osc.stop(t0 + 0.13);
+  }
+}
 
-                if (!isInTimeWindow) {
-                    const missSide = ball.side;
-                    state.ballIncoming = false;
-                    state.ballState = null;
-                    AudioEngine.stopBallAudio();
-                    AudioEngine.playMissSound(missSide);
-                    gameHint.classList.remove('visible');
-                    gameHint.textContent = timeDiff < 0 ? '⏱️ TOO EARLY' : '⏱️ TOO LATE';
-                    gameHint.classList.add('visible');
-                    setTimeout(() => gameHint.classList.remove('visible'), 800);
-                    onMiss();
-                    return;
-                }
+/**
+ * 2. PLAYSTATION MOVE SENSOR FUSION ENGINE
+ * Separates POSE (Forehand vs Backhand orientation) from SWING ENERGY (vector magnitude).
+ */
+class MoveKinematicEngine {
+  constructor(onSwing, onDiagUpdate = null) {
+    this.onSwing = onSwing;
+    this.onDiagUpdate = onDiagUpdate;
+    this.active = false;
+    this.lockoutUntil = 0;
 
-                if (swingData.type === ball.expectedSwing) {
-                    state.ballIncoming = false;
-                    state.ballState = null;
-                    AudioEngine.stopBallAudio();
-                    AudioEngine.playHitSound();
-                    gameHint.classList.remove('visible');
-                    onHit();
-                } else {
-                    state.ballIncoming = false;
-                    state.ballState = null;
-                    AudioEngine.stopBallAudio();
-                    AudioEngine.playMissSound(ball.side);
-                    gameHint.classList.remove('visible');
-                    gameHint.textContent = '❌ WRONG SIDE — MISS';
-                    gameHint.classList.add('visible');
-                    setTimeout(() => gameHint.classList.remove('visible'), 800);
-                    onMiss();
-                }
-            }
+    // Running Gravity Extraction Filters
+    this.gravX = 0;
+    this.gravY = 0;
+    this.gravZ = 9.8;
+    this.alpha = 0.85;
 
-            function onHit() {
-                if (state.mode === 'practice') {
-                    state.practiceStreak++;
-                    if (state.practiceStreak > state.practiceBest) state.practiceBest = state.practiceStreak;
-                    practiceStatus.textContent = 'Streak: ' + state.practiceStreak + ' | Best: ' + state.practiceBest;
-                    const returnSide = Math.random() < 0.5 ? 'left' : 'right';
-                    setTimeout(() => {
-                        if (state.screen === 'practice') {
-                            startBallApproach(returnSide);
-                        }
-                    }, 1200);
-                } else if (state.mode === 'multiplayer') {
-                    const opponentSide = Math.random() < 0.5 ? 'left' : 'right';
-                    sendToOpponent({
-                        type: 'ball_coming',
-                        side: opponentSide,
-                        timestamp: Date.now(),
-                    });
-                    state.ballIncoming = false;
-                    state.ballState = null;
-                    gameHint.classList.remove('visible');
-                    updateScoreboard();
-                }
-            }
+    // Minimum dynamic swing acceleration across all 3 axes combined
+    this.SWING_ACCEL_THRESHOLD = 5.2; // m/s²
 
-            function onMiss() {
-                if (state.mode === 'practice') {
-                    state.practiceStreak = 0;
-                    practiceStatus.textContent = 'Miss! Streak reset. Best: ' + state.practiceBest + ' | Press Serve to retry';
-                    state.ballIncoming = false;
-                    state.ballState = null;
-                    updateScoreboard();
-                } else if (state.mode === 'multiplayer') {
-                    state.opponentPoints++;
-                    sendToOpponent({ type: 'opponent_miss' });
-                    checkGameEnd();
-                    if (state.screen === 'playing') {
-                        afterPoint();
-                    }
-                }
-            }
+    this.onMotion = this.onMotion.bind(this);
+  }
 
-            function onOpponentMiss() {
-                state.playerPoints++;
-                checkGameEnd();
-                if (state.screen === 'playing') {
-                    afterPoint();
-                }
-            }
+  async requestPermission() {
+    if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+      try {
+        const res = await DeviceMotionEvent.requestPermission();
+        return res === 'granted';
+      } catch (e) {
+        return false;
+      }
+    }
+    return true;
+  }
 
-            function checkGameEnd() {
-                let gameWon = false;
-                if (state.isDeuce) {
-                    if (state.advantage === 'player' && state.playerPoints >= 5) gameWon = true;
-                    if (state.advantage === 'opponent' && state.opponentPoints >= 5) gameWon = true;
-                }
-                if (!gameWon) {
-                    if (state.playerPoints >= 4 && state.opponentPoints >= 4) {
-                        state.isDeuce = true;
-                        if (state.playerPoints > state.opponentPoints) state.advantage = 'player';
-                        else if (state.opponentPoints > state.playerPoints) state.advantage = 'opponent';
-                        else state.advantage = null;
-                    }
-                    if (state.playerPoints >= 4 && state.playerPoints - state.opponentPoints >= 2) gameWon = true;
-                    if (state.opponentPoints >= 4 && state.opponentPoints - state.playerPoints >= 2) gameWon = true;
-                }
-                if (gameWon) {
-                    if (state.playerPoints > state.opponentPoints) state.playerGames++;
-                    else state.opponentGames++;
-                    state.playerPoints = 0;
-                    state.opponentPoints = 0;
-                    state.isDeuce = false;
-                    state.advantage = null;
-                    state.gamesPlayed++;
-                    state.isServing = !state.isServing;
-                    const winner = state.playerGames > state.opponentGames ? 'Player 1' : 'Player 2';
-                    AudioEngine.speak('Game, ' + winner + '. ' + state.playerGames + ' games to ' + state.opponentGames + '.');
-                }
-            }
+  start() {
+    this.active = true;
+    this.lockoutUntil = 0;
+    this.gravX = 0;
+    this.gravY = 0;
+    this.gravZ = 9.8;
+    window.addEventListener('devicemotion', this.onMotion, false);
+  }
 
-            function afterPoint() {
-                state.serveNumber++;
-                updateScoreboard();
-                const announceText = formatAnnouncement();
-                setTimeout(() => {
-                    AudioEngine.speak(announceText);
-                }, 400);
-                state.ballIncoming = false;
-                state.ballState = null;
-                gameHint.classList.remove('visible');
-                if (state.isServing) {
-                    setTimeout(() => {
-                        if (state.screen === 'playing') {
-                            initiateServe();
-                        }
-                    }, 2200);
-                }
-            }
+  stop() {
+    this.active = false;
+    window.removeEventListener('devicemotion', this.onMotion, false);
+  }
 
-            function initiateServe() {
-                if (state.mode === 'practice') {
-                    const side = Math.random() < 0.5 ? 'left' : 'right';
-                    startBallApproach(side);
-                    updateScoreboard();
-                } else if (state.mode === 'multiplayer') {
-                    if (state.isServing) {
-                        const receiverSide = Math.random() < 0.5 ? 'left' : 'right';
-                        sendToOpponent({
-                            type: 'ball_coming',
-                            side: receiverSide,
-                            timestamp: Date.now(),
-                        });
-                    }
-                    state.ballIncoming = false;
-                    state.ballState = null;
-                    gameHint.classList.remove('visible');
-                    updateScoreboard();
-                }
-            }
+  onMotion(e) {
+    if (!this.active) return;
 
-            // ============================================================
-            // MULTIPLAYER (PeerJS/WebRTC)
-            // ============================================================
-            function sendToOpponent(data) {
-                if (state.connection && state.connection.open) {
-                    try {
-                        state.connection.send(JSON.stringify(data));
-                    } catch (e) {
-                        console.warn('Send failed:', e);
-                    }
-                }
-            }
+    let ax = 0, ay = 0, az = 0;
+    let rawGravZ = 0;
 
-            function createMatch() {
-                const code = generateRoomCode();
-                state.roomCode = code;
-                state.isHost = true;
-                state.isServing = true;
-                state.mode = 'multiplayer';
-                state.playerPoints = 0;
-                state.opponentPoints = 0;
-                state.playerGames = 0;
-                state.opponentGames = 0;
-                state.isDeuce = false;
-                state.advantage = null;
-                state.gamesPlayed = 0;
-                state.serveNumber = 0;
-                createCodeDisplay.textContent = code;
-                showScreen('create');
-                try {
-                    state.peer = new Peer('aerotennis-' + code, {
-                        debug: 1,
-                        config: {
-                            iceServers: [
-                                { urls: 'stun:stun.l.google.com:19302' },
-                                { urls: 'stun:stun1.l.google.com:19302' },
-                            ]
-                        }
-                    });
-                } catch (e) {
-                    console.error('Peer creation failed:', e);
-                    createWaitStatus.textContent = 'Error creating match. Try again.';
-                    createWaitStatus.classList.add('danger');
-                    return;
-                }
-                state.peer.on('open', () => {
-                    createWaitStatus.textContent = 'Waiting for opponent...';
-                    createWaitStatus.classList.add('highlight');
-                    createWaitStatus.classList.remove('danger');
-                });
-                state.peer.on('connection', (conn) => {
-                    state.connection = conn;
-                    state.opponentConnected = true;
-                    conn.on('open', () => {
-                        createWaitStatus.textContent = 'Opponent connected! Starting...';
-                        startMultiplayerGame();
-                    });
-                    conn.on('data', (rawData) => {
-                        handleIncomingMessage(rawData);
-                    });
-                    conn.on('close', () => {
-                        state.opponentConnected = false;
-                        if (state.screen === 'playing') {
-                            showModal('Connection Lost', 'Your opponent disconnected.', () => { showScreen('menu'); });
-                        } else if (state.screen === 'create') {
-                            createWaitStatus.textContent = 'Opponent disconnected. Waiting...';
-                            createWaitStatus.classList.add('warning');
-                        }
-                    });
-                    conn.on('error', (err) => {
-                        console.warn('Connection error:', err);
-                    });
-                });
-                state.peer.on('error', (err) => {
-                    console.error('PeerJS error:', err);
-                    let msg = 'PeerJS error: ' + (err.type || 'unknown');
-                    if (err.type === 'unavailable-id') msg = 'Room code already in use. Try again.';
-                    else if (err.type === 'peer-unavailable') msg = 'Room code not found.';
-                    createWaitStatus.textContent = msg;
-                    createWaitStatus.classList.add('danger');
-                });
-            }
+    if (e.accelerationIncludingGravity && e.accelerationIncludingGravity.x !== null) {
+      const g = e.accelerationIncludingGravity;
+      // High-pass filter to extract dynamic stroke acceleration
+      this.gravX = this.alpha * this.gravX + (1 - this.alpha) * g.x;
+      this.gravY = this.alpha * this.gravY + (1 - this.alpha) * g.y;
+      this.gravZ = this.alpha * this.gravZ + (1 - this.alpha) * g.z;
 
-            function joinMatch(code) {
-                if (!code || code.length !== ROOM_CODE_LENGTH || !/^\d{6}$/.test(code)) {
-                    joinError.textContent = 'Enter a valid 6-digit code';
-                    return;
-                }
-                state.roomCode = code;
-                state.isHost = false;
-                state.isServing = false;
-                state.mode = 'multiplayer';
-                state.playerPoints = 0;
-                state.opponentPoints = 0;
-                state.playerGames = 0;
-                state.opponentGames = 0;
-                state.isDeuce = false;
-                state.advantage = null;
-                state.gamesPlayed = 0;
-                state.serveNumber = 0;
-                joinError.textContent = 'Connecting...';
-                joinError.classList.add('highlight');
-                try {
-                    state.peer = new Peer({
-                        debug: 1,
-                        config: {
-                            iceServers: [
-                                { urls: 'stun:stun.l.google.com:19302' },
-                                { urls: 'stun:stun1.l.google.com:19302' },
-                            ]
-                        }
-                    });
-                } catch (e) {
-                    joinError.textContent = 'Error initializing connection.';
-                    joinError.classList.add('danger');
-                    return;
-                }
-                state.peer.on('open', () => {
-                    const conn = state.peer.connect('aerotennis-' + code, { reliable: true });
-                    state.connection = conn;
-                    conn.on('open', () => {
-                        state.opponentConnected = true;
-                        joinError.textContent = 'Connected! Starting...';
-                        startMultiplayerGame();
-                    });
-                    conn.on('data', (rawData) => {
-                        handleIncomingMessage(rawData);
-                    });
-                    conn.on('close', () => {
-                        state.opponentConnected = false;
-                        if (state.screen === 'playing') {
-                            showModal('Connection Lost', 'Your opponent disconnected.', () => { showScreen('menu'); });
-                        }
-                    });
-                    conn.on('error', (err) => {
-                        console.warn('Conn error:', err);
-                        joinError.textContent = 'Connection error.';
-                        joinError.classList.add('danger');
-                    });
-                });
-                state.peer.on('error', (err) => {
-                    console.error('Peer error:', err);
-                    let msg = 'Connection error.';
-                    if (err.type === 'peer-unavailable') msg = 'Room not found. Check the code.';
-                    joinError.textContent = msg;
-                    joinError.classList.add('danger');
-                });
-            }
+      ax = g.x - this.gravX;
+      ay = g.y - this.gravY;
+      az = g.z - this.gravZ;
+      rawGravZ = this.gravZ;
+    } else if (e.acceleration && e.acceleration.x !== null) {
+      ax = e.acceleration.x || 0;
+      ay = e.acceleration.y || 0;
+      az = e.acceleration.z || 0;
+    }
 
-            function handleIncomingMessage(rawData) {
-                let data;
-                try {
-                    data = JSON.parse(rawData);
-                } catch (e) {
-                    return;
-                }
-                switch (data.type) {
-                    case 'ball_coming':
-                        const side = data.side;
-                        if (state.screen === 'playing') {
-                            startBallApproach(side);
-                        }
-                        break;
-                    case 'opponent_miss':
-                        if (state.screen === 'playing') {
-                            onOpponentMiss();
-                        }
-                        break;
-                    default:
-                        break;
-                }
-            }
+    // 1. TOTAL KINETIC POWER (Vector Magnitude - ALWAYS positive, any direction)
+    const dynamicPower = Math.sqrt(ax * ax + ay * ay + az * az);
 
-            function startMultiplayerGame() {
-                showScreen('playing');
-                state.screen = 'playing';
-                scoreboard.classList.remove('hidden');
-                updateScoreboard();
-                const announce = state.isServing ? 'Player 1 to serve. Game start.' : 'Player 2 to serve. Game start.';
-                AudioEngine.speak(announce);
-                setTimeout(() => {
-                    if (state.screen === 'playing') {
-                        initiateServe();
-                    }
-                }, 1500);
-            }
+    // 2. RACKET POSE ORIENTATION:
+    // When held horizontally in right hand:
+    // - FOREHAND: Screen points forward into room. Z-axis gravity is positive or near zero (gravZ >= 0.5).
+    // - BACKHAND: Hand crosses chest, wrist flips inward so screen faces your chest/face.
+    //             The back panel now faces forward into the room, causing gravity on Z to be negative (gravZ < 0.5).
+    const currentFace = (rawGravZ < 0.5) ? 'BACK_PANEL' : 'SCREEN';
 
-            function cancelCreateMatch() {
-                if (state.peer) {
-                    try { state.peer.destroy(); } catch (e) {}
-                    state.peer = null;
-                }
-                if (state.connection) {
-                    try { state.connection.close(); } catch (e) {}
-                    state.connection = null;
-                }
-                state.opponentConnected = false;
-                state.roomCode = null;
-                state.mode = null;
-                showScreen('menu');
-            }
+    // Update real-time lobby diagnostic
+    if (this.onDiagUpdate) {
+      this.onDiagUpdate(currentFace, dynamicPower);
+    }
 
-            function cancelJoinMatch() {
-                if (state.peer) {
-                    try { state.peer.destroy(); } catch (e) {}
-                    state.peer = null;
-                }
-                if (state.connection) {
-                    try { state.connection.close(); } catch (e) {}
-                    state.connection = null;
-                }
-                state.opponentConnected = false;
-                state.roomCode = null;
-                state.mode = null;
-                showScreen('menu');
-            }
+    const now = performance.now();
+    if (now < this.lockoutUntil) return;
 
-            // ============================================================
-            // PRACTICE MODE
-            // ============================================================
-            function startPractice() {
-                state.mode = 'practice';
-                state.playerPoints = 0;
-                state.opponentPoints = 0;
-                state.playerGames = 0;
-                state.opponentGames = 0;
-                state.isDeuce = false;
-                state.advantage = null;
-                state.gamesPlayed = 0;
-                state.serveNumber = 0;
-                state.practiceStreak = 0;
-                state.practiceBest = 0;
-                state.isServing = true;
-                practiceStatus.textContent = 'Press "Serve" to begin';
-                practiceStatus.classList.add('highlight');
-                practiceStatus.classList.remove('danger');
-                showScreen('practice');
-            }
+    // 3. TRIGGER SWING
+    if (dynamicPower >= this.SWING_ACCEL_THRESHOLD) {
+      this.lockoutUntil = now + 650; // Lockout to ignore swing deceleration / recovery
+      this.onSwing(currentFace, dynamicPower);
+    }
+  }
+}
 
-            function practiceServe() {
-                if (state.screen !== 'practice') return;
-                const side = Math.random() < 0.5 ? 'left' : 'right';
-                practiceStatus.textContent = 'Ball incoming! Swing to hit.';
-                practiceStatus.classList.add('highlight');
-                practiceStatus.classList.remove('danger');
-                updateScoreboard();
-                startBallApproach(side);
-            }
+/**
+ * 3. AUTHORITATIVE TENNIS MATCH CONTROLLER
+ */
+class TennisMatchController {
+  constructor(audio, role, sendPacket, motionEngine) {
+    this.audio = audio;
+    this.role = role;
+    this.sendPacket = sendPacket;
+    this.motion = motionEngine;
 
-            function practiceBackToMenu() {
-                state.mode = null;
-                state.ballIncoming = false;
-                state.ballState = null;
-                AudioEngine.stopBallAudio();
-                showScreen('menu');
-            }
+    this.points = [0, 0];
+    this.games = [0, 0];
+    this.server = 0;
 
-            // ============================================================
-            // WAKE LOCK & HEADPHONE CHECK
-            // ============================================================
-            async function requestWakeLock() {
-                try {
-                    if ('wakeLock' in navigator) {
-                        state.wakeLock = await navigator.wakeLock.request('screen');
-                        state.wakeLock.addEventListener('release', () => {
-                            state.wakeLock = null;
-                        });
-                    }
-                } catch (e) {
-                    console.warn('Wake lock failed:', e);
-                    try {
-                        const ctx = state.audioCtx;
-                        if (ctx) {
-                            const silentOsc = ctx.createOscillator();
-                            const silentGain = ctx.createGain();
-                            silentGain.gain.value = 0.0001;
-                            silentOsc.connect(silentGain);
-                            silentGain.connect(ctx.destination);
-                            silentOsc.start();
-                            window.__silentKeepAlive = { osc: silentOsc, gain: silentGain };
-                        }
-                    } catch (e2) {}
-                }
-            }
+    this.state = 'IDLE'; // 'IDLE', 'AWAITING_SERVE', 'BALL_APPROACH', 'STRIKE_ZONE'
+    this.expectedDirection = null; // -1: Left (Backhand), 1: Right (Forehand)
+    this.flightTime = 1.35;
+    this.ballStartTime = 0;
+    this.hitMargin = 0.48; // Generous 480ms sweet spot margin
+    this.missTimeout = null;
+    this.strikeZoneTimeout = null;
+  }
 
-            function releaseWakeLock() {
-                if (state.wakeLock) {
-                    try { state.wakeLock.release(); } catch (e) {}
-                    state.wakeLock = null;
-                }
-                if (window.__silentKeepAlive) {
-                    try {
-                        window.__silentKeepAlive.osc.stop();
-                        window.__silentKeepAlive.gain.disconnect();
-                    } catch (e) {}
-                    window.__silentKeepAlive = null;
-                }
-            }
+  getScoreStr() {
+    const p1 = this.points[0];
+    const p2 = this.points[1];
 
-            async function checkHeadphones() {
-                try {
-                    if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
-                        const devices = await navigator.mediaDevices.enumerateDevices();
-                        const audioOutputs = devices.filter(d => d.kind === 'audiooutput');
-                        if (audioOutputs.length > 0) {
-                            const hasHeadphones = audioOutputs.some(d =>
-                                d.label && (d.label.toLowerCase().includes('headphone') ||
-                                    d.label.toLowerCase().includes('earbud') ||
-                                    d.label.toLowerCase().includes('earphone') ||
-                                    d.label.toLowerCase().includes('bluetooth'))
-                            );
-                            if (hasHeadphones) return true;
-                            if (audioOutputs.length === 1 && audioOutputs[0].deviceId === 'default') {
-                                return 'unknown';
-                            }
-                        }
-                        return 'unknown';
-                    }
-                } catch (e) {
-                    console.warn('Headphone check failed:', e);
-                }
-                return 'unknown';
-            }
+    if (p1 >= 3 && p2 >= 3) {
+      if (p1 === p2) return "Deuce";
+      if (p1 === p2 + 1) return this.server === 0 ? "Advantage Server" : "Advantage Receiver";
+      if (p2 === p1 + 1) return this.server === 1 ? "Advantage Server" : "Advantage Receiver";
+    }
 
-            async function ensureHeadphonesAndMotion(callback) {
-                const hpStatus = await checkHeadphones();
-                if (hpStatus === false) {
-                    showModal('Headphones Required', '⚠️ Please connect stereo headphones/earphones before playing.', () => {});
-                    return;
-                }
-                if (hpStatus === 'unknown') {
-                    showModal('Headphones Check', '🎧 Please ensure stereo headphones/earphones are connected.', () => {
-                        requestMotionPermission(callback);
-                    });
-                    return;
-                }
-                requestMotionPermission(callback);
-            }
+    const terms = ["Love", "15", "30", "40"];
+    const serverScore = this.server === 0 ? terms[p1] : terms[p2];
+    const receiverScore = this.server === 0 ? terms[p2] : terms[p1];
+    return `${serverScore} - ${receiverScore}`;
+  }
 
-            function requestMotionPermission(callback) {
-                if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
-                    DeviceMotionEvent.requestPermission()
-                        .then(permState => {
-                            if (permState === 'granted') {
-                                state.motionPermissionGranted = true;
-                                if (callback) callback();
-                            } else {
-                                showModal('Permission Denied', 'Motion sensor access is required for swing detection.', () => {});
-                            }
-                        })
-                        .catch(err => {
-                            console.warn('Motion permission error:', err);
-                            state.motionPermissionGranted = true;
-                            if (callback) callback();
-                        });
-                } else {
-                    state.motionPermissionGranted = true;
-                    if (callback) callback();
-                }
-            }
+  updateHUD(mainText = "", telemetryText = "") {
+    document.getElementById('hudScore').innerText = this.getScoreStr();
+    const isMyServe = (this.role === 'GUEST') ? (this.server === 1) : (this.server === 0);
+    document.getElementById('hudServer').innerText = isMyServe ? "YOUR SERVE" : "RECEIVING";
+    if (mainText) document.getElementById('hudFeedbackMain').innerText = mainText;
+    if (telemetryText) document.getElementById('hudTelemetry').innerText = telemetryText;
+  }
 
-            // ============================================================
-            // ORIENTATION LOCK
-            // ============================================================
-            async function lockOrientation() {
-                try {
-                    if (screen.orientation && screen.orientation.lock) {
-                        await screen.orientation.lock('landscape');
-                    }
-                } catch (e) {
-                    console.log('Orientation lock not supported or failed:', e.message || e);
-                }
-            }
+  speak(text, cb) {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      let done = false;
+      const wrap = () => { if (!done) { done = true; if (cb) cb(); } };
+      u.onend = wrap;
+      u.onerror = wrap;
+      setTimeout(wrap, 2000);
+      window.speechSynthesis.speak(u);
+    } else {
+      if (cb) setTimeout(cb, 1000);
+    }
+  }
 
-            // ============================================================
-            // INITIALIZATION
-            // ============================================================
-            function initApp() {
-                const initAudioOnce = () => {
-                    AudioEngine.init();
-                    AudioEngine.resume();
-                    document.removeEventListener('click', initAudioOnce);
-                    document.removeEventListener('touchstart', initAudioOnce);
-                };
-                document.addEventListener('click', initAudioOnce);
-                document.addEventListener('touchstart', initAudioOnce);
+  start() {
+    this.updateHUD("MATCH COMMENCING");
+    this.speak("Match commenced. " + (this.server === 0 ? "You serve." : "Opponent serves."), () => {
+      this.initiatePoint();
+    });
+  }
 
-                if ('speechSynthesis' in window) {
-                    window.speechSynthesis.getVoices();
-                    window.speechSynthesis.onvoiceschanged = () => {
-                        window.speechSynthesis.getVoices();
-                    };
-                }
+  initiatePoint() {
+    this.state = 'IDLE';
+    clearTimeout(this.missTimeout);
+    clearTimeout(this.strikeZoneTimeout);
+    this.updateHUD("POINT SETUP", "");
 
-                lockOrientation();
+    setTimeout(() => {
+      const isMyServe = (this.role === 'GUEST') ? (this.server === 1) : (this.server === 0);
 
-                const swingHandler = (swingData) => {
-                    if (state.screen === 'playing' || state.screen === 'practice') {
-                        handleSwing(swingData);
-                    }
-                };
+      if (isMyServe) {
+        this.state = 'AWAITING_SERVE';
+        this.updateHUD("YOUR SERVE", "SWING FORWARD TO STRIKE");
+      } else {
+        this.updateHUD("RECEIVING", "AWAITING OPPONENT SERVE");
+        if (this.role === 'WALL') {
+          setTimeout(() => {
+            const serveDir = Math.random() > 0.5 ? 1 : -1;
+            this.receiveBall(serveDir, 1.35);
+          }, 1200);
+        } else if (this.role === 'HOST') {
+          this.sendPacket({ type: 'CMD_SERVE' });
+        }
+      }
+    }, 1200);
+  }
 
-                $('btnPractice').addEventListener('click', () => {
-                    AudioEngine.init();
-                    AudioEngine.resume();
-                    ensureHeadphonesAndMotion(() => {
-                        MotionDetection.init(swingHandler);
-                        startPractice();
-                    });
-                });
-                $('btnCreate').addEventListener('click', () => {
-                    AudioEngine.init();
-                    AudioEngine.resume();
-                    ensureHeadphonesAndMotion(() => {
-                        MotionDetection.init(swingHandler);
-                        createMatch();
-                    });
-                });
-                $('btnJoin').addEventListener('click', () => {
-                    AudioEngine.init();
-                    AudioEngine.resume();
-                    joinError.textContent = '';
-                    joinError.classList.remove('danger');
-                    joinError.classList.remove('highlight');
-                    joinCodeInput.value = '';
-                    showScreen('join');
-                });
-                $('btnJoinConnect').addEventListener('click', () => {
-                    AudioEngine.init();
-                    AudioEngine.resume();
-                    const code = joinCodeInput.value.trim();
-                    if (!code || code.length !== 6 || !/^\d{6}$/.test(code)) {
-                        joinError.textContent = 'Enter a valid 6-digit code';
-                        joinError.classList.add('danger');
-                        return;
-                    }
-                    ensureHeadphonesAndMotion(() => {
-                        MotionDetection.init(swingHandler);
-                        joinMatch(code);
-                    });
-                });
-                $('btnJoinBack').addEventListener('click', () => {
-                    cancelJoinMatch();
-                });
-                $('btnCreateCancel').addEventListener('click', () => {
-                    cancelCreateMatch();
-                });
-                $('btnServePractice').addEventListener('click', () => {
-                    AudioEngine.init();
-                    AudioEngine.resume();
-                    practiceServe();
-                });
-                $('btnPracticeBack').addEventListener('click', () => {
-                    practiceBackToMenu();
-                });
+  receiveBall(dir, dur) {
+    this.state = 'BALL_APPROACH';
+    clearTimeout(this.missTimeout);
+    clearTimeout(this.strikeZoneTimeout);
 
-                joinCodeInput.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter') {
-                        $('btnJoinConnect').click();
-                    }
-                });
+    this.expectedDirection = dir;
+    this.flightTime = dur;
+    this.ballStartTime = performance.now();
 
-                const startWakeLock = () => { requestWakeLock(); };
-                document.addEventListener('visibilitychange', () => {
-                    if (document.visibilityState === 'visible' && (state.screen === 'playing' || state.screen === 'practice')) {
-                        requestWakeLock();
-                    }
-                });
+    this.audio.playBallApproach(dir, dur);
+    this.updateHUD(
+      dir === 1 ? "FOREHAND (RIGHT)" : "BACKHAND (LEFT)",
+      "PREPARE STANCE"
+    );
 
-                showScreen('menu');
-                menuStatus.textContent = '🎧 Use headphones | 🔄 Landscape mode | 🎾 Swing to hit';
-                menuStatus.classList.add('highlight');
-            }
+    // Strike Zone opens when ball arrives in hitting range
+    const timeUntilStrikeZone = Math.max(0, (dur - this.hitMargin) * 1000);
+    this.strikeZoneTimeout = setTimeout(() => {
+      if (this.state === 'BALL_APPROACH') {
+        this.state = 'STRIKE_ZONE';
+        this.updateHUD(
+          dir === 1 ? "FOREHAND (RIGHT)" : "BACKHAND (LEFT)",
+          "SWEET SPOT - HIT NOW!"
+        );
+      }
+    }, timeUntilStrikeZone);
 
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', initApp);
-            } else {
-                initApp();
-            }
+    // Ball Missed Timeout
+    this.missTimeout = setTimeout(() => {
+      if (this.state === 'BALL_APPROACH' || this.state === 'STRIKE_ZONE') {
+        this.handleMiss("TOO LATE - MISSED BALL");
+      }
+    }, (dur + this.hitMargin) * 1000);
+  }
 
-            window.__aeroTennisState = state;
-        })();
-    </script>
+  onSwing(face, forceVal) {
+    // 1. Serving
+    if (this.state === 'AWAITING_SERVE') {
+      this.state = 'IDLE';
+      this.audio.playHit();
+      this.updateHUD("SERVE STRUCK!", `POWER: ${forceVal.toFixed(1)} [${face}]`);
+
+      if (this.role === 'WALL') {
+        setTimeout(() => this.audio.playBounce(), 450);
+        setTimeout(() => {
+          const nextDir = Math.random() > 0.5 ? 1 : -1;
+          this.receiveBall(nextDir, 1.30);
+        }, 900);
+      } else {
+        const nextDir = Math.random() > 0.5 ? 1 : -1;
+        this.sendPacket({ type: 'BALL', direction: nextDir, duration: 1.30 });
+      }
+      return;
+    }
+
+    // 2. Early Preparation Immunity Window
+    if (this.state === 'BALL_APPROACH') {
+      const elapsed = (performance.now() - this.ballStartTime) / 1000;
+      if (elapsed < (this.flightTime - this.hitMargin - 0.20)) {
+        return; // Ignore preparation wrist turn
+      }
+      this.audio.playWhiff();
+      this.handleMiss("TOO EARLY!", `SWUNG AT ${elapsed.toFixed(2)}s`);
+      return;
+    }
+
+    // 3. Strike Zone Execution
+    if (this.state === 'STRIKE_ZONE') {
+      clearTimeout(this.missTimeout);
+      clearTimeout(this.strikeZoneTimeout);
+      this.state = 'IDLE';
+
+      // Verify Stance:
+      // Right Ear Ball = Screen forward (FOREHAND)
+      // Left Ear Ball = Back panel forward (BACKHAND)
+      const targetFace = (this.expectedDirection === 1) ? 'SCREEN' : 'BACK_PANEL';
+      if (face !== targetFace) {
+        this.audio.playWhiff();
+        const err = (this.expectedDirection === 1)
+          ? "WRONG FACE (NEED SCREEN FORWARD)"
+          : "WRONG FACE (NEED BACK PANEL FORWARD)";
+        this.handleMiss(err, `DETECTED: ${face}`);
+        return;
+      }
+
+      // Clean Hit Confirmed!
+      this.audio.playHit();
+      this.updateHUD("CLEAN HIT!", `FORCE: ${forceVal.toFixed(1)} m/s² [${face}]`);
+
+      if (this.role === 'WALL') {
+        setTimeout(() => this.audio.playBounce(), 450);
+        setTimeout(() => {
+          const nextDir = Math.random() > 0.5 ? 1 : -1;
+          this.receiveBall(nextDir, 1.25);
+        }, 900);
+      } else {
+        this.sendPacket({
+          type: 'BALL',
+          direction: Math.random() > 0.5 ? 1 : -1,
+          duration: 1.25
+        });
+      }
+      return;
+    }
+
+    this.audio.playWhiff();
+  }
+
+  handleMiss(reason, telemetry = "") {
+    this.state = 'IDLE';
+    clearTimeout(this.missTimeout);
+    clearTimeout(this.strikeZoneTimeout);
+
+    this.audio.playBounce();
+    this.updateHUD(reason, telemetry);
+
+    if (this.role === 'WALL') {
+      this.awardPoint(1);
+    } else if (this.role === 'HOST') {
+      this.awardPoint(1);
+    } else if (this.role === 'GUEST') {
+      this.sendPacket({ type: 'GUEST_MISS', reason });
+    }
+  }
+
+  awardPoint(winner) {
+    this.points[winner]++;
+    const p1 = this.points[0];
+    const p2 = this.points[1];
+
+    let gameWon = false;
+    if (p1 >= 4 && p1 >= p2 + 2) {
+      this.games[0]++;
+      gameWon = true;
+    } else if (p2 >= 4 && p2 >= p1 + 2) {
+      this.games[1]++;
+      gameWon = true;
+    }
+
+    if (this.role === 'HOST') {
+      this.sendPacket({
+        type: 'SYNC',
+        points: this.points,
+        games: this.games,
+        server: this.server,
+        gameWon
+      });
+    }
+
+    if (gameWon) {
+      this.points = [0, 0];
+      this.server = this.server === 0 ? 1 : 0;
+      const str = `Game won. Standings: ${this.games[0]} games to ${this.games[1]}.`;
+      this.updateHUD(str);
+      this.speak(str, () => this.initiatePoint());
+    } else {
+      const s = this.getScoreStr();
+      this.updateHUD(s);
+      this.speak(s, () => this.initiatePoint());
+    }
+  }
+}
+
+/**
+ * 4. SYSTEM LIFECYCLE & LOBBY LOGIC
+ */
+const audio = new AudioEngine();
+let match = null;
+let peer = null;
+let conn = null;
+
+// Symmetrical Motion Engine with Real-Time Calibration Feedback
+const motion = new MoveKinematicEngine(
+  (face, force) => {
+    if (match) match.onSwing(face, force);
+  },
+  (face, mag) => {
+    const badge = document.getElementById('racketState');
+    const bar = document.getElementById('meterBar');
+    const pwrText = document.getElementById('testPwr');
+
+    if (badge && document.getElementById('lobby').style.display !== 'none') {
+      if (face === 'SCREEN') {
+        badge.innerText = "FOREHAND STANCE (SCREEN OUTWARD)";
+        badge.className = "racket-state forehand";
+      } else {
+        badge.innerText = "BACKHAND STANCE (BACK PANEL OUTWARD)";
+        badge.className = "racket-state backhand";
+      }
+
+      if (pwrText) pwrText.innerText = mag.toFixed(1) + " m/s²";
+      if (bar) {
+        const pct = Math.min(100, (mag / 12.0) * 100);
+        bar.style.width = pct + "%";
+        bar.style.background = mag >= 5.2 ? "var(--cyan)" : "var(--green)";
+      }
+    }
+  }
+);
+
+// 1. Activate sensors in lobby
+document.getElementById('btnInitSensors').addEventListener('click', async () => {
+  const ok = await motion.requestPermission();
+  if (ok) {
+    motion.start();
+    audio.init();
+    document.getElementById('btnInitSensors').style.display = 'none';
+    document.getElementById('statusText').innerText = "Sensors Active! Test Forehand and Backhand above.";
+  } else {
+    alert("Motion sensor permission denied.");
+  }
+});
+
+// Audio Stereo Verification
+document.getElementById('btnAudioTest').addEventListener('click', () => {
+  const btn = document.getElementById('btnAudioTest');
+  btn.innerText = "Playing in LEFT ear...";
+  audio.playTestTone(-1, 400, () => {
+    btn.innerText = "Playing in RIGHT ear...";
+    audio.playTestTone(1, 800, () => {
+      btn.innerText = "Verified! (Tap to replay)";
+    });
+  });
+});
+
+function launchGame(title) {
+  document.getElementById('lobby').style.display = 'none';
+  document.getElementById('hud').style.display = 'flex';
+  document.getElementById('hudMode').innerText = title;
+
+  audio.init();
+  motion.start();
+
+  if ('wakeLock' in navigator) {
+    navigator.wakeLock.request('screen').catch(() => {});
+  }
+}
+
+// 2. Solo Wall Practice Mode
+document.getElementById('btnWall').addEventListener('click', async () => {
+  const ok = await motion.requestPermission();
+  if (!ok) {
+    alert("Motion sensor access required.");
+    return;
+  }
+  launchGame("SOLO WALL PRACTICE");
+  match = new TennisMatchController(audio, 'WALL', null, motion);
+  match.start();
+});
+
+// 3. Create Match (Host)
+document.getElementById('btnCreate').addEventListener('click', async () => {
+  const ok = await motion.requestPermission();
+  if (!ok) return;
+
+  const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+  document.getElementById('statusText').innerHTML = 
+    `ROOM: <b style="color:var(--green); font-size:1.2rem;">${code}</b><br/>Waiting for Player 2...`;
+
+  peer = new Peer('aerotennis-' + code);
+  peer.on('connection', (c) => {
+    conn = c;
+    const onOpen = () => {
+      launchGame("1v1 CYBER ARENA (HOST)");
+      match = new TennisMatchController(audio, 'HOST', (pkt) => conn.send(pkt), motion);
+
+      conn.on('data', (d) => {
+        if (d.type === 'BALL') match.receiveBall(d.direction, d.duration);
+        else if (d.type === 'GUEST_MISS') match.awardPoint(0);
+      });
+
+      match.start();
+    };
+
+    if (conn.open) onOpen();
+    else conn.on('open', onOpen);
+  });
+
+  peer.on('error', (e) => alert("P2P Error: " + e.type));
+});
+
+// 4. Join Match (Guest)
+document.getElementById('btnJoin').addEventListener('click', async () => {
+  const code = document.getElementById('roomInput').value.trim().toUpperCase();
+  if (code.length < 4) {
+    alert("Enter valid room code.");
+    return;
+  }
+  const ok = await motion.requestPermission();
+  if (!ok) return;
+
+  document.getElementById('statusText').innerText = "Connecting...";
+  peer = new Peer();
+  peer.on('open', () => {
+    conn = peer.connect('aerotennis-' + code, { reliable: true });
+    const onOpen = () => {
+      launchGame("1v1 CYBER ARENA (GUEST)");
+      match = new TennisMatchController(audio, 'GUEST', (pkt) => conn.send(pkt), motion);
+
+      conn.on('data', (d) => {
+        if (d.type === 'BALL') match.receiveBall(d.direction, d.duration);
+        else if (d.type === 'CMD_SERVE') {
+          match.server = 1;
+          match.initiatePoint();
+        } else if (d.type === 'SYNC') {
+          match.points = d.points;
+          match.games = d.games;
+          match.server = d.server;
+          match.updateHUD();
+        }
+      });
+    };
+
+    if (conn.open) onOpen();
+    else conn.on('open', onOpen);
+  });
+
+  peer.on('error', () => alert("Could not find room code."));
+});
+
+document.getElementById('btnQuit').addEventListener('click', () => window.location.reload());
+</script>
 </body>
 </html>

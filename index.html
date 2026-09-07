@@ -5,20 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0, viewport-fit=cover" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <title>AeroTennis | Precision Motion Tennis</title>
+  <title>AeroTennis | Motion-Audio Cyber Tennis</title>
 
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 
   <style>
     :root {
-      --bg: #04070c;
-      --panel: #0a101d;
+      --bg: #030508;
+      --panel: #090e17;
       --cyan: #00f3ff;
       --green: #39ff14;
       --red: #ff0055;
       --yellow: #ffd700;
-      --dim: #62758c;
-      --border: #142236;
+      --dim: #5c6f84;
+      --border: #142033;
       --font: 'Courier New', Courier, monospace;
     }
 
@@ -71,7 +71,6 @@
       margin-bottom: 12px;
     }
 
-    /* Live Racket Sensor Diagnostic */
     .diagnostic-box {
       background: rgba(0, 0, 0, 0.5);
       border: 1px solid var(--border);
@@ -95,7 +94,7 @@
       padding: 8px;
       border-radius: 6px;
       font-weight: bold;
-      font-size: 0.85rem;
+      font-size: 0.82rem;
       letter-spacing: 1px;
       text-align: center;
       width: 100%;
@@ -210,7 +209,7 @@
     }
     .code-input:focus { border-color: var(--cyan); }
 
-    /* IN-GAME MINIMALIST CYBER HUD */
+    /* IN-GAME HUD */
     #hud {
       display: none;
       position: fixed;
@@ -279,12 +278,12 @@
 
   <div class="container" id="lobby">
     <h1>AEROTENNIS</h1>
-    <div class="sub">PlayStation Move Kinematics</div>
+    <div class="sub">Precision Spatial Audio Tennis</div>
 
-    <!-- Live Grip & Racket Face Monitor -->
+    <!-- Real-Time Racket Monitor -->
     <div class="diagnostic-box">
       <div class="diag-title">
-        <span>RACKET FACE SENSOR</span>
+        <span>LIVE RACKET FACE MONITOR</span>
         <span id="testPwr">0.0 m/s²</span>
       </div>
       <div class="racket-state" id="racketState">TAP "ACTIVATE MOTION SENSORS"</div>
@@ -327,7 +326,6 @@
 <script>
 /**
  * 1. REALISTIC AUDIO SYNTHESIZER
- * Accurate seam whistle, Doppler pitch rise, and stereo isolation.
  */
 class AudioEngine {
   constructor() {
@@ -464,8 +462,8 @@ class AudioEngine {
 }
 
 /**
- * 2. PLAYSTATION MOVE SENSOR FUSION ENGINE
- * Separates POSE (Forehand vs Backhand orientation) from SWING ENERGY (vector magnitude).
+ * 2. MOTION SENSOR ENGINE
+ * Direct forward thrust analysis with tilt cross-verification.
  */
 class MoveKinematicEngine {
   constructor(onSwing, onDiagUpdate = null) {
@@ -474,14 +472,11 @@ class MoveKinematicEngine {
     this.active = false;
     this.lockoutUntil = 0;
 
-    // Running Gravity Extraction Filters
-    this.gravX = 0;
-    this.gravY = 0;
-    this.gravZ = 9.8;
+    this.gravZ = 0;
     this.alpha = 0.85;
 
-    // Minimum dynamic swing acceleration across all 3 axes combined
-    this.SWING_ACCEL_THRESHOLD = 5.2; // m/s²
+    // Minimum acceleration required to consider an action a deliberate hit
+    this.SWING_ACCEL_THRESHOLD = 4.2; // m/s²
 
     this.onMotion = this.onMotion.bind(this);
   }
@@ -501,9 +496,7 @@ class MoveKinematicEngine {
   start() {
     this.active = true;
     this.lockoutUntil = 0;
-    this.gravX = 0;
-    this.gravY = 0;
-    this.gravZ = 9.8;
+    this.gravZ = 0;
     window.addEventListener('devicemotion', this.onMotion, false);
   }
 
@@ -516,36 +509,38 @@ class MoveKinematicEngine {
     if (!this.active) return;
 
     let ax = 0, ay = 0, az = 0;
-    let rawGravZ = 0;
+    let rawGz = 0;
 
-    if (e.accelerationIncludingGravity && e.accelerationIncludingGravity.x !== null) {
-      const g = e.accelerationIncludingGravity;
-      // High-pass filter to extract dynamic stroke acceleration
-      this.gravX = this.alpha * this.gravX + (1 - this.alpha) * g.x;
-      this.gravY = this.alpha * this.gravY + (1 - this.alpha) * g.y;
-      this.gravZ = this.alpha * this.gravZ + (1 - this.alpha) * g.z;
-
-      ax = g.x - this.gravX;
-      ay = g.y - this.gravY;
-      az = g.z - this.gravZ;
-      rawGravZ = this.gravZ;
-    } else if (e.acceleration && e.acceleration.x !== null) {
+    if (e.acceleration && e.acceleration.z !== null && !isNaN(e.acceleration.z)) {
       ax = e.acceleration.x || 0;
       ay = e.acceleration.y || 0;
       az = e.acceleration.z || 0;
+      if (e.accelerationIncludingGravity && e.accelerationIncludingGravity.z !== null) {
+        rawGz = e.accelerationIncludingGravity.z;
+      }
+    } else if (e.accelerationIncludingGravity && e.accelerationIncludingGravity.z !== null) {
+      const g = e.accelerationIncludingGravity;
+      rawGz = g.z;
+      this.gravZ = this.alpha * this.gravZ + (1 - this.alpha) * g.z;
+      ax = (g.x || 0);
+      ay = (g.y || 0);
+      az = g.z - this.gravZ;
     }
 
-    // 1. TOTAL KINETIC POWER (Vector Magnitude - ALWAYS positive, any direction)
+    // Dynamic 3D vector power
     const dynamicPower = Math.sqrt(ax * ax + ay * ay + az * az);
 
-    // 2. RACKET POSE ORIENTATION:
-    // When held horizontally in right hand:
-    // - FOREHAND: Screen points forward into room. Z-axis gravity is positive or near zero (gravZ >= 0.5).
-    // - BACKHAND: Hand crosses chest, wrist flips inward so screen faces your chest/face.
-    //             The back panel now faces forward into the room, causing gravity on Z to be negative (gravZ < 0.5).
-    const currentFace = (rawGravZ < 0.5) ? 'BACK_PANEL' : 'SCREEN';
+    // Identify which side is facing outward during the stroke:
+    // Forehand: Screen faces forward into the swing path (az > 0 or rawGz > 1.5)
+    // Backhand: Wrist flips across body, back panel faces forward (az < 0 or rawGz < 1.5)
+    let currentFace = 'SCREEN';
+    if (az < -1.8 || (rawGz < 1.0 && az <= 1.0)) {
+      currentFace = 'BACK_PANEL';
+    } else {
+      currentFace = 'SCREEN';
+    }
 
-    // Update real-time lobby diagnostic
+    // Live lobby diagnostic
     if (this.onDiagUpdate) {
       this.onDiagUpdate(currentFace, dynamicPower);
     }
@@ -553,9 +548,9 @@ class MoveKinematicEngine {
     const now = performance.now();
     if (now < this.lockoutUntil) return;
 
-    // 3. TRIGGER SWING
+    // Trigger physical swing
     if (dynamicPower >= this.SWING_ACCEL_THRESHOLD) {
-      this.lockoutUntil = now + 650; // Lockout to ignore swing deceleration / recovery
+      this.lockoutUntil = now + 650; // Lockout to ignore deceleration follow-through
       this.onSwing(currentFace, dynamicPower);
     }
   }
@@ -563,6 +558,7 @@ class MoveKinematicEngine {
 
 /**
  * 3. AUTHORITATIVE TENNIS MATCH CONTROLLER
+ * Zero-premature-miss architecture: lets player move freely during approach.
  */
 class TennisMatchController {
   constructor(audio, role, sendPacket, motionEngine) {
@@ -575,13 +571,11 @@ class TennisMatchController {
     this.games = [0, 0];
     this.server = 0;
 
-    this.state = 'IDLE'; // 'IDLE', 'AWAITING_SERVE', 'BALL_APPROACH', 'STRIKE_ZONE'
+    this.state = 'IDLE'; // 'IDLE', 'AWAITING_SERVE', 'BALL_IN_PLAY'
     this.expectedDirection = null; // -1: Left (Backhand), 1: Right (Forehand)
     this.flightTime = 1.35;
     this.ballStartTime = 0;
-    this.hitMargin = 0.48; // Generous 480ms sweet spot margin
     this.missTimeout = null;
-    this.strikeZoneTimeout = null;
   }
 
   getScoreStr() {
@@ -633,7 +627,6 @@ class TennisMatchController {
   initiatePoint() {
     this.state = 'IDLE';
     clearTimeout(this.missTimeout);
-    clearTimeout(this.strikeZoneTimeout);
     this.updateHUD("POINT SETUP", "");
 
     setTimeout(() => {
@@ -657,9 +650,8 @@ class TennisMatchController {
   }
 
   receiveBall(dir, dur) {
-    this.state = 'BALL_APPROACH';
+    this.state = 'BALL_IN_PLAY';
     clearTimeout(this.missTimeout);
-    clearTimeout(this.strikeZoneTimeout);
 
     this.expectedDirection = dir;
     this.flightTime = dur;
@@ -667,28 +659,16 @@ class TennisMatchController {
 
     this.audio.playBallApproach(dir, dur);
     this.updateHUD(
-      dir === 1 ? "FOREHAND (RIGHT)" : "BACKHAND (LEFT)",
-      "PREPARE STANCE"
+      dir === 1 ? "FOREHAND (RIGHT) ▶" : "◀ BACKHAND (LEFT)",
+      dir === 1 ? "SCREEN FORWARD" : "SCREEN FACES YOU -> BACK PANEL FORWARD"
     );
 
-    // Strike Zone opens when ball arrives in hitting range
-    const timeUntilStrikeZone = Math.max(0, (dur - this.hitMargin) * 1000);
-    this.strikeZoneTimeout = setTimeout(() => {
-      if (this.state === 'BALL_APPROACH') {
-        this.state = 'STRIKE_ZONE';
-        this.updateHUD(
-          dir === 1 ? "FOREHAND (RIGHT)" : "BACKHAND (LEFT)",
-          "SWEET SPOT - HIT NOW!"
-        );
-      }
-    }, timeUntilStrikeZone);
-
-    // Ball Missed Timeout
+    // Ball miss timeout: only triggers if the player never swings at all
     this.missTimeout = setTimeout(() => {
-      if (this.state === 'BALL_APPROACH' || this.state === 'STRIKE_ZONE') {
+      if (this.state === 'BALL_IN_PLAY') {
         this.handleMiss("TOO LATE - MISSED BALL");
       }
-    }, (dur + this.hitMargin) * 1000);
+    }, (dur + 0.45) * 1000);
   }
 
   onSwing(face, forceVal) {
@@ -711,37 +691,33 @@ class TennisMatchController {
       return;
     }
 
-    // 2. Early Preparation Immunity Window
-    if (this.state === 'BALL_APPROACH') {
+    // 2. Ball In Play (Rally Hit)
+    if (this.state === 'BALL_IN_PLAY') {
       const elapsed = (performance.now() - this.ballStartTime) / 1000;
-      if (elapsed < (this.flightTime - this.hitMargin - 0.20)) {
-        return; // Ignore preparation wrist turn
-      }
-      this.audio.playWhiff();
-      this.handleMiss("TOO EARLY!", `SWUNG AT ${elapsed.toFixed(2)}s`);
-      return;
-    }
 
-    // 3. Strike Zone Execution
-    if (this.state === 'STRIKE_ZONE') {
+      // IMMUNITY WINDOW: If arm is moving into position during the early approach (< 0.65s),
+      // ignore it safely so cross-body setup never triggers a premature miss!
+      if (elapsed < (this.flightTime - 0.65)) {
+        return;
+      }
+
       clearTimeout(this.missTimeout);
-      clearTimeout(this.strikeZoneTimeout);
       this.state = 'IDLE';
 
-      // Verify Stance:
-      // Right Ear Ball = Screen forward (FOREHAND)
-      // Left Ear Ball = Back panel forward (BACKHAND)
+      // Check Racket Face:
+      // Right Ear = Screen forward (FOREHAND)
+      // Left Ear = Back panel forward (BACKHAND)
       const targetFace = (this.expectedDirection === 1) ? 'SCREEN' : 'BACK_PANEL';
       if (face !== targetFace) {
         this.audio.playWhiff();
         const err = (this.expectedDirection === 1)
-          ? "WRONG FACE (NEED SCREEN FORWARD)"
-          : "WRONG FACE (NEED BACK PANEL FORWARD)";
+          ? "WRONG FACE (NEED SCREEN)"
+          : "WRONG FACE (NEED BACK PANEL)";
         this.handleMiss(err, `DETECTED: ${face}`);
         return;
       }
 
-      // Clean Hit Confirmed!
+      // CLEAN HIT CONFIRMED!
       this.audio.playHit();
       this.updateHUD("CLEAN HIT!", `FORCE: ${forceVal.toFixed(1)} m/s² [${face}]`);
 
@@ -767,7 +743,6 @@ class TennisMatchController {
   handleMiss(reason, telemetry = "") {
     this.state = 'IDLE';
     clearTimeout(this.missTimeout);
-    clearTimeout(this.strikeZoneTimeout);
 
     this.audio.playBounce();
     this.updateHUD(reason, telemetry);
@@ -827,7 +802,6 @@ let match = null;
 let peer = null;
 let conn = null;
 
-// Symmetrical Motion Engine with Real-Time Calibration Feedback
 const motion = new MoveKinematicEngine(
   (face, force) => {
     if (match) match.onSwing(face, force);
@@ -839,10 +813,10 @@ const motion = new MoveKinematicEngine(
 
     if (badge && document.getElementById('lobby').style.display !== 'none') {
       if (face === 'SCREEN') {
-        badge.innerText = "FOREHAND STANCE (SCREEN OUTWARD)";
+        badge.innerText = "FOREHAND (SCREEN OUTWARD)";
         badge.className = "racket-state forehand";
       } else {
-        badge.innerText = "BACKHAND STANCE (BACK PANEL OUTWARD)";
+        badge.innerText = "BACKHAND (BACK PANEL OUTWARD)";
         badge.className = "racket-state backhand";
       }
 
@@ -850,13 +824,12 @@ const motion = new MoveKinematicEngine(
       if (bar) {
         const pct = Math.min(100, (mag / 12.0) * 100);
         bar.style.width = pct + "%";
-        bar.style.background = mag >= 5.2 ? "var(--cyan)" : "var(--green)";
+        bar.style.background = mag >= 4.2 ? "var(--cyan)" : "var(--green)";
       }
     }
   }
 );
 
-// 1. Activate sensors in lobby
 document.getElementById('btnInitSensors').addEventListener('click', async () => {
   const ok = await motion.requestPermission();
   if (ok) {
@@ -869,7 +842,6 @@ document.getElementById('btnInitSensors').addEventListener('click', async () => 
   }
 });
 
-// Audio Stereo Verification
 document.getElementById('btnAudioTest').addEventListener('click', () => {
   const btn = document.getElementById('btnAudioTest');
   btn.innerText = "Playing in LEFT ear...";
@@ -894,7 +866,6 @@ function launchGame(title) {
   }
 }
 
-// 2. Solo Wall Practice Mode
 document.getElementById('btnWall').addEventListener('click', async () => {
   const ok = await motion.requestPermission();
   if (!ok) {
@@ -906,7 +877,6 @@ document.getElementById('btnWall').addEventListener('click', async () => {
   match.start();
 });
 
-// 3. Create Match (Host)
 document.getElementById('btnCreate').addEventListener('click', async () => {
   const ok = await motion.requestPermission();
   if (!ok) return;
@@ -937,7 +907,6 @@ document.getElementById('btnCreate').addEventListener('click', async () => {
   peer.on('error', (e) => alert("P2P Error: " + e.type));
 });
 
-// 4. Join Match (Guest)
 document.getElementById('btnJoin').addEventListener('click', async () => {
   const code = document.getElementById('roomInput').value.trim().toUpperCase();
   if (code.length < 4) {

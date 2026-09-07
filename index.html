@@ -27,8 +27,7 @@
             -webkit-user-select: none;
             user-select: none;
         }
-        html,
-        body {
+        html, body {
             width: 100%;
             height: 100%;
             overflow: hidden;
@@ -118,8 +117,7 @@
             user-select: none;
             touch-action: manipulation;
         }
-        .btn:hover,
-        .btn:active {
+        .btn:hover, .btn:active {
             background: rgba(0, 255, 65, 0.12);
             box-shadow: 0 0 25px rgba(0, 255, 65, 0.25);
         }
@@ -127,8 +125,7 @@
             border-color: var(--neon-cyan);
             color: var(--neon-cyan);
         }
-        .btn.cyan:hover,
-        .btn.cyan:active {
+        .btn.cyan:hover, .btn.cyan:active {
             background: rgba(0, 229, 255, 0.12);
             box-shadow: 0 0 25px rgba(0, 229, 255, 0.25);
         }
@@ -309,23 +306,12 @@
             margin-bottom: 16px;
         }
         @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: scale(0.95);
-            }
-            to {
-                opacity: 1;
-                transform: scale(1);
-            }
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
         }
         @keyframes pulse {
-            0%,
-            100% {
-                opacity: 1;
-            }
-            50% {
-                opacity: 0.3;
-            }
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
         }
         .pulse {
             animation: pulse 1.5s ease-in-out infinite;
@@ -370,7 +356,6 @@
         <div>Please rotate your device<br>to <span style="color:var(--neon-green);font-weight:700;">LANDSCAPE</span> mode<br><br><span style="font-size:0.7em;color:var(--text-dim);">Hold your phone like a tennis racket</span></div>
     </div>
     <div id="app">
-        <!-- Scoreboard -->
         <div class="scoreboard hidden" id="scoreboard">
             <div class="score-player">
                 <span class="name" id="sbPlayerName">YOU</span>
@@ -387,11 +372,9 @@
                 <span class="games" id="sbOppGames">Games: 0</span>
             </div>
         </div>
-        <!-- Game Area -->
         <div class="game-area" id="gameArea">
             <div class="game-hint" id="gameHint">🎾 LISTEN FOR THE BALL</div>
         </div>
-        <!-- MENU SCREEN -->
         <div class="screen active" id="screenMenu">
             <div class="logo">AeroTennis</div>
             <div class="subtitle">Visionless Interactive</div>
@@ -400,14 +383,12 @@
             <button class="btn" id="btnJoin">🔗 Join Match</button>
             <div class="status-text" id="menuStatus" style="margin-top:16px;"></div>
         </div>
-        <!-- PRACTICE SCREEN -->
         <div class="screen" id="screenPractice">
             <div class="logo" style="font-size:1.5em;">Practice — Wall Mode</div>
             <div class="status-text highlight" id="practiceStatus">Press "Serve" to begin</div>
             <button class="btn cyan" id="btnServePractice">🎾 Serve</button>
             <button class="btn small warning" id="btnPracticeBack">← Back to Menu</button>
         </div>
-        <!-- CREATE SCREEN -->
         <div class="screen" id="screenCreate">
             <div class="logo" style="font-size:1.4em;">Create Match</div>
             <div class="status-text">Share this code with your opponent:</div>
@@ -415,16 +396,14 @@
             <div class="status-text highlight" id="createWaitStatus">Waiting for opponent...</div>
             <button class="btn small danger" id="btnCreateCancel">Cancel</button>
         </div>
-        <!-- JOIN SCREEN -->
         <div class="screen" id="screenJoin">
             <div class="logo" style="font-size:1.4em;">Join Match</div>
             <div class="status-text">Enter the 6-digit code:</div>
-            <input class="input-field" id="joinCodeInput" type="text" maxlength="6" inputmode="numeric" autocomplete="off" placeholder="••••••">
+            <input class="input-field" id="joinCodeInput" type="text" maxlength="6" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="••••••">
             <button class="btn" id="btnJoinConnect">Connect</button>
             <div class="status-text danger" id="joinError" style="min-height:1.5em;"></div>
             <button class="btn small warning" id="btnJoinBack">← Back to Menu</button>
         </div>
-        <!-- MODAL OVERLAY -->
         <div class="modal-overlay hidden" id="modalOverlay">
             <div class="modal-box" id="modalBox">
                 <h2 id="modalTitle">Notice</h2>
@@ -434,8 +413,7 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js">
-    </script>
+    <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
     <script>
         (function() {
             'use strict';
@@ -443,50 +421,45 @@
             // ============================================================
             // CONSTANTS
             // ============================================================
-            const BALL_TRAVEL_TIME_MS = 2200; // ms from hit to arrival
-            const SWING_WINDOW_MS = 180; // ±ms around arrival for valid hit
-            const SWING_ACCEL_THRESHOLD = 3.5; // m/s² total acceleration
-            const SWING_Z_THRESHOLD = 1.8; // m/s² Z-component for side determination
-            const SWING_COOLDOWN_MS = 400; // ms between swing detections
-            const AUDIO_RAMP_START = 0.05; // initial volume
-            const AUDIO_RAMP_PEAK = 1.0; // peak volume at arrival
+            const BALL_TRAVEL_TIME_MS = 2200;
+            const SWING_WINDOW_MS = 180;
+            const SWING_ACCEL_THRESHOLD = 3.5;
+            const SWING_Z_THRESHOLD = 1.8;
+            const SWING_COOLDOWN_MS = 400;
+            const AUDIO_RAMP_START = 0.05;
+            const AUDIO_RAMP_PEAK = 1.0;
             const ROOM_CODE_LENGTH = 6;
 
             // ============================================================
             // STATE
             // ============================================================
             const state = {
-                screen: 'menu', // menu | practice | create | join | playing
-                mode: null, // 'practice' | 'multiplayer'
+                screen: 'menu',
+                mode: null,
                 isHost: false,
                 isServing: false,
-                serveNumber: 0, // total points played
+                serveNumber: 0,
                 gamesPlayed: 0,
-                ballState: null, // { side: 'left'|'right', startTime: number, arrivalTime: number, expectedSwing: 'forehand'|'backhand' }
+                ballState: null,
                 lastSwingTime: 0,
-                // Scoring
-                playerPoints: 0, // current game points (Love,15,30,40,Adv)
+                playerPoints: 0,
                 opponentPoints: 0,
                 playerGames: 0,
                 opponentGames: 0,
                 isDeuce: false,
-                advantage: null, // 'player' | 'opponent' | null
-                // Multiplayer
+                advantage: null,
                 peer: null,
                 connection: null,
                 roomCode: null,
                 opponentConnected: false,
-                // Practice
                 practiceStreak: 0,
                 practiceBest: 0,
-                // Audio
                 audioCtx: null,
                 ballAudioNodes: null,
-                // Flags
                 motionPermissionGranted: false,
                 wakeLock: null,
-                headphonesConfirmed: false,
                 ballIncoming: false,
+                ballMissTimeout: null,
             };
 
             // ============================================================
@@ -533,8 +506,13 @@
                 state.screen = name;
                 if (name === 'playing') {
                     scoreboard.classList.remove('hidden');
+                    requestWakeLock();
                 } else {
                     scoreboard.classList.add('hidden');
+                    if (name !== 'practice') releaseWakeLock();
+                }
+                if (name === 'practice') {
+                    requestWakeLock();
                 }
             }
 
@@ -548,28 +526,18 @@
                 };
             }
 
-            function hideModal() {
-                modalOverlay.classList.add('hidden');
-            }
-
             function generateRoomCode() {
                 return Math.floor(100000 + Math.random() * 900000).toString();
             }
 
             function getPointsLabel(p) {
                 switch (p) {
-                    case 0:
-                        return 'Love';
-                    case 1:
-                        return '15';
-                    case 2:
-                        return '30';
-                    case 3:
-                        return '40';
-                    case 4:
-                        return 'Adv';
-                    default:
-                        return '?';
+                    case 0: return 'Love';
+                    case 1: return '15';
+                    case 2: return '30';
+                    case 3: return '40';
+                    case 4: return 'Adv';
+                    default: return '?';
                 }
             }
 
@@ -617,6 +585,10 @@
                 state.ballState = null;
                 gameHint.classList.remove('visible');
                 gameHint.textContent = '🎾 LISTEN FOR THE BALL';
+                if (state.ballMissTimeout) {
+                    clearTimeout(state.ballMissTimeout);
+                    state.ballMissTimeout = null;
+                }
             }
 
             // ============================================================
@@ -626,7 +598,7 @@
                 init() {
                     if (state.audioCtx) return;
                     try {
-                        state.audioCtx = new(window.AudioContext || window.webkitAudioContext)();
+                        state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                     } catch (e) {
                         console.error('AudioContext init failed:', e);
                         return;
@@ -635,45 +607,34 @@
                         state.audioCtx.resume().catch(() => {});
                     }
                 },
-
                 resume() {
                     if (state.audioCtx && state.audioCtx.state === 'suspended') {
                         state.audioCtx.resume().catch(() => {});
                     }
                 },
-
                 createBallWhoosh(side, durationMs) {
                     const ctx = state.audioCtx;
                     if (!ctx) return null;
-                    // Noise buffer
                     const bufferSize = ctx.sampleRate * (durationMs / 1000);
                     const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
                     const data = buffer.getChannelData(0);
-                    for (let i = 0; i < bufferSize; i++) {
-                        data[i] = Math.random() * 2 - 1;
-                    }
+                    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
                     const noise = ctx.createBufferSource();
                     noise.buffer = buffer;
                     noise.loop = false;
-                    // Bandpass filter
                     const filter = ctx.createBiquadFilter();
                     filter.type = 'bandpass';
                     filter.frequency.setValueAtTime(600, ctx.currentTime);
                     filter.frequency.exponentialRampToValueAtTime(1800, ctx.currentTime + durationMs / 1000 * 0.7);
                     filter.frequency.exponentialRampToValueAtTime(400, ctx.currentTime + durationMs / 1000);
                     filter.Q.value = 1.2;
-                    // Gain (proximity)
                     const gain = ctx.createGain();
                     gain.gain.setValueAtTime(AUDIO_RAMP_START, ctx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(AUDIO_RAMP_PEAK, ctx.currentTime + durationMs / 1000 *
-                        0.85);
-                    gain.gain.exponentialRampToValueAtTime(AUDIO_RAMP_START * 0.3, ctx.currentTime + durationMs / 1000 *
-                        1.05);
+                    gain.gain.exponentialRampToValueAtTime(AUDIO_RAMP_PEAK, ctx.currentTime + durationMs / 1000 * 0.85);
+                    gain.gain.exponentialRampToValueAtTime(AUDIO_RAMP_START * 0.3, ctx.currentTime + durationMs / 1000 * 1.05);
                     gain.gain.linearRampToValueAtTime(0.0001, ctx.currentTime + durationMs / 1000 * 1.15);
-                    // Stereo panner
                     const panner = ctx.createStereoPanner();
                     panner.pan.value = side === 'left' ? -0.85 : 0.85;
-                    // Connect
                     noise.connect(filter);
                     filter.connect(gain);
                     gain.connect(panner);
@@ -682,11 +643,9 @@
                     noise.stop(ctx.currentTime + durationMs / 1000 * 1.2);
                     return { noise, filter, gain, panner, startTime: Date.now() };
                 },
-
                 createBallHitSound() {
                     const ctx = state.audioCtx;
                     if (!ctx) return;
-                    // Short "pock" sound
                     const osc = ctx.createOscillator();
                     const gain = ctx.createGain();
                     const filter = ctx.createBiquadFilter();
@@ -702,7 +661,6 @@
                     gain.connect(ctx.destination);
                     osc.start(ctx.currentTime);
                     osc.stop(ctx.currentTime + 0.1);
-                    // Add a noise burst for realism
                     const bufSize = ctx.sampleRate * 0.05;
                     const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
                     const d = buf.getChannelData(0);
@@ -722,11 +680,9 @@
                     noise.start(ctx.currentTime);
                     noise.stop(ctx.currentTime + 0.06);
                 },
-
                 createMissSound(side) {
                     const ctx = state.audioCtx;
                     if (!ctx) return;
-                    // Ball continues past the player - fading whoosh
                     const bufSize = ctx.sampleRate * 0.6;
                     const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
                     const d = buf.getChannelData(0);
@@ -749,7 +705,6 @@
                     noise.start(ctx.currentTime);
                     noise.stop(ctx.currentTime + 0.6);
                 },
-
                 speak(text) {
                     if (!('speechSynthesis' in window)) return;
                     try {
@@ -767,7 +722,6 @@
                         console.warn('Speech synthesis failed:', e);
                     }
                 },
-
                 stopBallAudio() {
                     if (state.ballAudioNodes) {
                         try {
@@ -775,11 +729,10 @@
                             state.ballAudioNodes.gain.disconnect();
                             state.ballAudioNodes.filter.disconnect();
                             state.ballAudioNodes.panner.disconnect();
-                        } catch (e) { /* already stopped */ }
+                        } catch (e) {}
                         state.ballAudioNodes = null;
                     }
                 },
-
                 playBallApproach(side, durationMs) {
                     this.stopBallAudio();
                     this.resume();
@@ -788,7 +741,6 @@
                     this.resume();
                     state.ballAudioNodes = this.createBallWhoosh(side, durationMs);
                 },
-
                 playHitSound() {
                     this.resume();
                     if (!state.audioCtx) this.init();
@@ -796,7 +748,6 @@
                     this.resume();
                     this.createBallHitSound();
                 },
-
                 playMissSound(side) {
                     this.resume();
                     if (!state.audioCtx) this.init();
@@ -832,16 +783,14 @@
                     const ay = event.acceleration.y || 0;
                     const az = event.acceleration.z || 0;
                     const magnitude = Math.sqrt(ax * ax + ay * ay + az * az);
-                    // Detect swing: rising edge crossing threshold
-                    const crossedUp = magnitude > SWING_ACCEL_THRESHOLD && this.lastAccelMagnitude <=
-                        SWING_ACCEL_THRESHOLD;
+                    const crossedUp = magnitude > SWING_ACCEL_THRESHOLD && this.lastAccelMagnitude <= SWING_ACCEL_THRESHOLD;
                     const now = Date.now();
                     if (crossedUp && (now - state.lastSwingTime) > SWING_COOLDOWN_MS) {
                         state.lastSwingTime = now;
                         const zComp = az;
                         let swingType = 'unknown';
-                        if (zComp > SWING_Z_THRESHOLD) swingType = 'forehand'; // screen facing forward
-                        else if (zComp < -SWING_Z_THRESHOLD) swingType = 'backhand'; // back panel facing forward
+                        if (zComp > SWING_Z_THRESHOLD) swingType = 'forehand';
+                        else if (zComp < -SWING_Z_THRESHOLD) swingType = 'backhand';
                         else swingType = 'edge';
                         if (this.swingCallback) {
                             this.swingCallback({
@@ -874,28 +823,45 @@
                 state.ballIncoming = true;
                 const now = Date.now();
                 state.ballState = {
-                    side: side, // 'left' or 'right'
+                    side: side,
                     startTime: now,
                     arrivalTime: now + BALL_TRAVEL_TIME_MS,
                     expectedSwing: side === 'left' ? 'backhand' : 'forehand',
                 };
                 AudioEngine.playBallApproach(side, BALL_TRAVEL_TIME_MS);
-                gameHint.textContent = side === 'left' ? '⬅️ BALL LEFT — BACKHAND' : '➡️ BALL RIGHT — FOREHAND';
+                gameHint.textContent = '🎾 LISTEN';
                 gameHint.classList.add('visible');
+
+                state.ballMissTimeout = setTimeout(() => {
+                    if (state.ballIncoming && state.ballState) {
+                        const missSide = state.ballState.side;
+                        state.ballIncoming = false;
+                        state.ballState = null;
+                        AudioEngine.stopBallAudio();
+                        AudioEngine.playMissSound(missSide);
+                        gameHint.classList.remove('visible');
+                        gameHint.textContent = '⏱️ TOO LATE';
+                        gameHint.classList.add('visible');
+                        setTimeout(() => gameHint.classList.remove('visible'), 800);
+                        onMiss();
+                    }
+                }, BALL_TRAVEL_TIME_MS + SWING_WINDOW_MS + 100);
             }
 
             function handleSwing(swingData) {
-                if (!state.ballIncoming || !state.ballState) {
-                    // No ball incoming - ignore swing
-                    return;
+                if (!state.ballIncoming || !state.ballState) return;
+
+                if (state.ballMissTimeout) {
+                    clearTimeout(state.ballMissTimeout);
+                    state.ballMissTimeout = null;
                 }
+
                 const ball = state.ballState;
                 const now = Date.now();
                 const timeDiff = now - ball.arrivalTime;
                 const isInTimeWindow = Math.abs(timeDiff) <= SWING_WINDOW_MS;
 
                 if (!isInTimeWindow) {
-                    // Too early or too late
                     const missSide = ball.side;
                     state.ballIncoming = false;
                     state.ballState = null;
@@ -909,9 +875,7 @@
                     return;
                 }
 
-                // Check swing type
                 if (swingData.type === ball.expectedSwing) {
-                    // HIT!
                     state.ballIncoming = false;
                     state.ballState = null;
                     AudioEngine.stopBallAudio();
@@ -919,7 +883,6 @@
                     gameHint.classList.remove('visible');
                     onHit();
                 } else {
-                    // Wrong side
                     state.ballIncoming = false;
                     state.ballState = null;
                     AudioEngine.stopBallAudio();
@@ -934,11 +897,9 @@
 
             function onHit() {
                 if (state.mode === 'practice') {
-                    // Wall mode: ball comes back after a short delay
                     state.practiceStreak++;
                     if (state.practiceStreak > state.practiceBest) state.practiceBest = state.practiceStreak;
                     practiceStatus.textContent = 'Streak: ' + state.practiceStreak + ' | Best: ' + state.practiceBest;
-                    // Random side for the return
                     const returnSide = Math.random() < 0.5 ? 'left' : 'right';
                     setTimeout(() => {
                         if (state.screen === 'practice') {
@@ -946,14 +907,12 @@
                         }
                     }, 1200);
                 } else if (state.mode === 'multiplayer') {
-                    // Send ball to opponent
                     const opponentSide = Math.random() < 0.5 ? 'left' : 'right';
                     sendToOpponent({
                         type: 'ball_coming',
                         side: opponentSide,
                         timestamp: Date.now(),
                     });
-                    // Reset local ball state
                     state.ballIncoming = false;
                     state.ballState = null;
                     gameHint.classList.remove('visible');
@@ -964,14 +923,13 @@
             function onMiss() {
                 if (state.mode === 'practice') {
                     state.practiceStreak = 0;
-                    practiceStatus.textContent = 'Miss! Streak reset. Best: ' + state.practiceBest +
-                        ' | Press Serve to retry';
+                    practiceStatus.textContent = 'Miss! Streak reset. Best: ' + state.practiceBest + ' | Press Serve to retry';
                     state.ballIncoming = false;
                     state.ballState = null;
                     updateScoreboard();
                 } else if (state.mode === 'multiplayer') {
-                    // Opponent scores a point
                     state.opponentPoints++;
+                    sendToOpponent({ type: 'opponent_miss' });
                     checkGameEnd();
                     if (state.screen === 'playing') {
                         afterPoint();
@@ -980,7 +938,6 @@
             }
 
             function onOpponentMiss() {
-                // Opponent missed - we score
                 state.playerPoints++;
                 checkGameEnd();
                 if (state.screen === 'playing') {
@@ -989,7 +946,6 @@
             }
 
             function checkGameEnd() {
-                // Check if a game is won
                 let gameWon = false;
                 if (state.isDeuce) {
                     if (state.advantage === 'player' && state.playerPoints >= 5) gameWon = true;
@@ -1008,18 +964,14 @@
                 if (gameWon) {
                     if (state.playerPoints > state.opponentPoints) state.playerGames++;
                     else state.opponentGames++;
-                    // Reset point scores
                     state.playerPoints = 0;
                     state.opponentPoints = 0;
                     state.isDeuce = false;
                     state.advantage = null;
                     state.gamesPlayed++;
-                    // Switch server after each game
                     state.isServing = !state.isServing;
-                    // Announce game
                     const winner = state.playerGames > state.opponentGames ? 'Player 1' : 'Player 2';
-                    AudioEngine.speak('Game, ' + winner + '. ' + state.playerGames + ' games to ' + state
-                        .opponentGames + '.');
+                    AudioEngine.speak('Game, ' + winner + '. ' + state.playerGames + ' games to ' + state.opponentGames + '.');
                 }
             }
 
@@ -1027,20 +979,19 @@
                 state.serveNumber++;
                 updateScoreboard();
                 const announceText = formatAnnouncement();
-                // Slight delay before announcement
                 setTimeout(() => {
                     AudioEngine.speak(announceText);
                 }, 400);
-                // Reset for next point
                 state.ballIncoming = false;
                 state.ballState = null;
                 gameHint.classList.remove('visible');
-                // Auto-serve after a short delay
-                setTimeout(() => {
-                    if (state.screen === 'playing') {
-                        initiateServe();
-                    }
-                }, 2200);
+                if (state.isServing) {
+                    setTimeout(() => {
+                        if (state.screen === 'playing') {
+                            initiateServe();
+                        }
+                    }, 2200);
+                }
             }
 
             function initiateServe() {
@@ -1048,20 +999,15 @@
                     const side = Math.random() < 0.5 ? 'left' : 'right';
                     startBallApproach(side);
                     updateScoreboard();
-                } else if (state.mode === 'multiplayer' && state.isHost) {
-                    // Host initiates serve
-                    const receiverSide = Math.random() < 0.5 ? 'left' : 'right';
-                    sendToOpponent({
-                        type: 'ball_coming',
-                        side: receiverSide,
-                        timestamp: Date.now(),
-                    });
-                    state.ballIncoming = false;
-                    state.ballState = null;
-                    gameHint.classList.remove('visible');
-                    updateScoreboard();
-                } else if (state.mode === 'multiplayer' && !state.isHost) {
-                    // Guest waits for host to serve
+                } else if (state.mode === 'multiplayer') {
+                    if (state.isServing) {
+                        const receiverSide = Math.random() < 0.5 ? 'left' : 'right';
+                        sendToOpponent({
+                            type: 'ball_coming',
+                            side: receiverSide,
+                            timestamp: Date.now(),
+                        });
+                    }
                     state.ballIncoming = false;
                     state.ballState = null;
                     gameHint.classList.remove('visible');
@@ -1098,7 +1044,6 @@
                 state.serveNumber = 0;
                 createCodeDisplay.textContent = code;
                 showScreen('create');
-                // Init PeerJS
                 try {
                     state.peer = new Peer('aerotennis-' + code, {
                         debug: 1,
@@ -1133,8 +1078,7 @@
                     conn.on('close', () => {
                         state.opponentConnected = false;
                         if (state.screen === 'playing') {
-                            showModal('Connection Lost', 'Your opponent disconnected.',
-                                () => { showScreen('menu'); });
+                            showModal('Connection Lost', 'Your opponent disconnected.', () => { showScreen('menu'); });
                         } else if (state.screen === 'create') {
                             createWaitStatus.textContent = 'Opponent disconnected. Waiting...';
                             createWaitStatus.classList.add('warning');
@@ -1147,11 +1091,8 @@
                 state.peer.on('error', (err) => {
                     console.error('PeerJS error:', err);
                     let msg = 'PeerJS error: ' + (err.type || 'unknown');
-                    if (err.type === 'unavailable-id') {
-                        msg = 'Room code already in use. Try again.';
-                    } else if (err.type === 'peer-unavailable') {
-                        msg = 'Room code not found.';
-                    }
+                    if (err.type === 'unavailable-id') msg = 'Room code already in use. Try again.';
+                    else if (err.type === 'peer-unavailable') msg = 'Room code not found.';
                     createWaitStatus.textContent = msg;
                     createWaitStatus.classList.add('danger');
                 });
@@ -1192,9 +1133,7 @@
                     return;
                 }
                 state.peer.on('open', () => {
-                    const conn = state.peer.connect('aerotennis-' + code, {
-                        reliable: true,
-                    });
+                    const conn = state.peer.connect('aerotennis-' + code, { reliable: true });
                     state.connection = conn;
                     conn.on('open', () => {
                         state.opponentConnected = true;
@@ -1207,8 +1146,7 @@
                     conn.on('close', () => {
                         state.opponentConnected = false;
                         if (state.screen === 'playing') {
-                            showModal('Connection Lost', 'Your opponent disconnected.',
-                                () => { showScreen('menu'); });
+                            showModal('Connection Lost', 'Your opponent disconnected.', () => { showScreen('menu'); });
                         }
                     });
                     conn.on('error', (err) => {
@@ -1220,9 +1158,7 @@
                 state.peer.on('error', (err) => {
                     console.error('Peer error:', err);
                     let msg = 'Connection error.';
-                    if (err.type === 'peer-unavailable') {
-                        msg = 'Room not found. Check the code.';
-                    }
+                    if (err.type === 'peer-unavailable') msg = 'Room not found. Check the code.';
                     joinError.textContent = msg;
                     joinError.classList.add('danger');
                 });
@@ -1237,23 +1173,15 @@
                 }
                 switch (data.type) {
                     case 'ball_coming':
-                        // Opponent hit the ball to us
                         const side = data.side;
                         if (state.screen === 'playing') {
                             startBallApproach(side);
                         }
                         break;
                     case 'opponent_miss':
-                        // Opponent missed - we scored
                         if (state.screen === 'playing') {
                             onOpponentMiss();
                         }
-                        break;
-                    case 'game_over':
-                        // Opponent says game over
-                        break;
-                    case 'sync':
-                        // Optional: sync server state
                         break;
                     default:
                         break;
@@ -1265,11 +1193,8 @@
                 state.screen = 'playing';
                 scoreboard.classList.remove('hidden');
                 updateScoreboard();
-                // Announce start
-                const announce = state.isServing ? 'Player 1 to serve. Game start.' :
-                    'Player 2 to serve. Game start.';
+                const announce = state.isServing ? 'Player 1 to serve. Game start.' : 'Player 2 to serve. Game start.';
                 AudioEngine.speak(announce);
-                // Initiate serve
                 setTimeout(() => {
                     if (state.screen === 'playing') {
                         initiateServe();
@@ -1360,7 +1285,6 @@
                     }
                 } catch (e) {
                     console.warn('Wake lock failed:', e);
-                    // Fallback: use NoSleep-like technique with silent audio
                     try {
                         const ctx = state.audioCtx;
                         if (ctx) {
@@ -1370,12 +1294,9 @@
                             silentOsc.connect(silentGain);
                             silentGain.connect(ctx.destination);
                             silentOsc.start();
-                            // Keep reference to prevent GC
                             window.__silentKeepAlive = { osc: silentOsc, gain: silentGain };
                         }
-                    } catch (e2) {
-                        console.warn('Silent keepalive failed:', e2);
-                    }
+                    } catch (e2) {}
                 }
             }
 
@@ -1394,13 +1315,11 @@
             }
 
             async function checkHeadphones() {
-                // Try to detect headphone connection
                 try {
                     if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
                         const devices = await navigator.mediaDevices.enumerateDevices();
                         const audioOutputs = devices.filter(d => d.kind === 'audiooutput');
                         if (audioOutputs.length > 0) {
-                            // Check if any output device name suggests headphones
                             const hasHeadphones = audioOutputs.some(d =>
                                 d.label && (d.label.toLowerCase().includes('headphone') ||
                                     d.label.toLowerCase().includes('earbud') ||
@@ -1408,7 +1327,6 @@
                                     d.label.toLowerCase().includes('bluetooth'))
                             );
                             if (hasHeadphones) return true;
-                            // If default device only, can't be sure
                             if (audioOutputs.length === 1 && audioOutputs[0].deviceId === 'default') {
                                 return 'unknown';
                             }
@@ -1422,38 +1340,29 @@
             }
 
             async function ensureHeadphonesAndMotion(callback) {
-                // Headphone check
                 const hpStatus = await checkHeadphones();
                 if (hpStatus === false) {
-                    showModal('Headphones Required',
-                        '⚠️ Please connect stereo headphones/earphones before playing. The game relies entirely on spatial audio to know where the ball is.',
-                        () => {});
+                    showModal('Headphones Required', '⚠️ Please connect stereo headphones/earphones before playing.', () => {});
                     return;
                 }
                 if (hpStatus === 'unknown') {
-                    showModal('Headphones Check',
-                        '🎧 Please ensure stereo headphones/earphones are connected. The game uses directional audio (left/right ear) to indicate ball position.',
-                        () => {
-                            requestMotionPermission(callback);
-                        });
+                    showModal('Headphones Check', '🎧 Please ensure stereo headphones/earphones are connected.', () => {
+                        requestMotionPermission(callback);
+                    });
                     return;
                 }
                 requestMotionPermission(callback);
             }
 
             function requestMotionPermission(callback) {
-                // iOS 13+ requires permission for DeviceMotionEvent
-                if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission ===
-                    'function') {
+                if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
                     DeviceMotionEvent.requestPermission()
                         .then(permState => {
                             if (permState === 'granted') {
                                 state.motionPermissionGranted = true;
                                 if (callback) callback();
                             } else {
-                                showModal('Permission Denied',
-                                    'Motion sensor access is required for swing detection. Please enable it in your browser settings.',
-                                    () => {});
+                                showModal('Permission Denied', 'Motion sensor access is required for swing detection.', () => {});
                             }
                         })
                         .catch(err => {
@@ -1484,7 +1393,6 @@
             // INITIALIZATION
             // ============================================================
             function initApp() {
-                // Audio init on first user gesture
                 const initAudioOnce = () => {
                     AudioEngine.init();
                     AudioEngine.resume();
@@ -1494,7 +1402,6 @@
                 document.addEventListener('click', initAudioOnce);
                 document.addEventListener('touchstart', initAudioOnce);
 
-                // Preload speech voices
                 if ('speechSynthesis' in window) {
                     window.speechSynthesis.getVoices();
                     window.speechSynthesis.onvoiceschanged = () => {
@@ -1502,22 +1409,19 @@
                     };
                 }
 
-                // Motion detection setup
-                MotionDetection.init((swingData) => {
+                lockOrientation();
+
+                const swingHandler = (swingData) => {
                     if (state.screen === 'playing' || state.screen === 'practice') {
                         handleSwing(swingData);
                     }
-                });
-                MotionDetection.start();
+                };
 
-                // Lock orientation
-                lockOrientation();
-
-                // Menu buttons
                 $('btnPractice').addEventListener('click', () => {
                     AudioEngine.init();
                     AudioEngine.resume();
                     ensureHeadphonesAndMotion(() => {
+                        MotionDetection.init(swingHandler);
                         startPractice();
                     });
                 });
@@ -1525,6 +1429,7 @@
                     AudioEngine.init();
                     AudioEngine.resume();
                     ensureHeadphonesAndMotion(() => {
+                        MotionDetection.init(swingHandler);
                         createMatch();
                     });
                 });
@@ -1547,6 +1452,7 @@
                         return;
                     }
                     ensureHeadphonesAndMotion(() => {
+                        MotionDetection.init(swingHandler);
                         joinMatch(code);
                     });
                 });
@@ -1565,38 +1471,30 @@
                     practiceBackToMenu();
                 });
 
-                // Enter key on join input
                 joinCodeInput.addEventListener('keydown', (e) => {
                     if (e.key === 'Enter') {
                         $('btnJoinConnect').click();
                     }
                 });
 
-                // Wake lock on game start
                 const startWakeLock = () => { requestWakeLock(); };
                 document.addEventListener('visibilitychange', () => {
-                    if (document.visibilityState === 'visible' && (state.screen === 'playing' || state.screen ===
-                            'practice')) {
+                    if (document.visibilityState === 'visible' && (state.screen === 'playing' || state.screen === 'practice')) {
                         requestWakeLock();
                     }
                 });
 
-                // Show menu initially
                 showScreen('menu');
                 menuStatus.textContent = '🎧 Use headphones | 🔄 Landscape mode | 🎾 Swing to hit';
                 menuStatus.classList.add('highlight');
             }
 
-            // ============================================================
-            // START
-            // ============================================================
             if (document.readyState === 'loading') {
                 document.addEventListener('DOMContentLoaded', initApp);
             } else {
                 initApp();
             }
 
-            // Expose state for debugging
             window.__aeroTennisState = state;
         })();
     </script>

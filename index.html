@@ -5,8 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0, viewport-fit=cover" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <title>AeroTennis | Motion-Audio Cyber Tennis</title>
+  <title>AeroTennis | Precision Motion Tennis</title>
 
+  <!-- PeerJS for WebRTC Direct Device-to-Device Matchmaking -->
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 
   <style>
@@ -17,7 +18,7 @@
       --green: #39ff14;
       --red: #ff0055;
       --yellow: #ffd700;
-      --dim: #5c6f84;
+      --dim: #60738a;
       --border: #142033;
       --font: 'Courier New', Courier, monospace;
     }
@@ -71,7 +72,8 @@
       margin-bottom: 12px;
     }
 
-    .diagnostic-box {
+    /* Hardware Calibration Panel */
+    .calib-box {
       background: rgba(0, 0, 0, 0.5);
       border: 1px solid var(--border);
       border-radius: 8px;
@@ -80,60 +82,37 @@
       text-align: left;
     }
 
-    .diag-title {
-      font-size: 0.72rem;
+    .calib-title {
+      font-size: 0.74rem;
       color: var(--yellow);
       letter-spacing: 1px;
-      margin-bottom: 6px;
+      margin-bottom: 8px;
       font-weight: bold;
       display: flex;
       justify-content: space-between;
     }
 
-    .racket-state {
-      padding: 8px;
-      border-radius: 6px;
-      font-weight: bold;
-      font-size: 0.82rem;
-      letter-spacing: 1px;
-      text-align: center;
-      width: 100%;
+    .calib-slots {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
       margin-bottom: 8px;
-      background: #101622;
-      border: 1px solid #223247;
-      color: var(--dim);
-      transition: all 0.15s ease;
     }
 
-    .racket-state.forehand {
-      background: rgba(57, 255, 20, 0.18);
+    .calib-badge {
+      padding: 8px 4px;
+      border-radius: 4px;
+      font-size: 0.72rem;
+      font-weight: bold;
+      text-align: center;
+      background: #0f1724;
+      border: 1px solid #1f2f47;
+      color: var(--dim);
+    }
+    .calib-badge.ready {
       border-color: var(--green);
       color: var(--green);
-      box-shadow: 0 0 12px rgba(57, 255, 20, 0.3);
-    }
-
-    .racket-state.backhand {
-      background: rgba(0, 243, 255, 0.18);
-      border-color: var(--cyan);
-      color: var(--cyan);
-      box-shadow: 0 0 12px rgba(0, 243, 255, 0.3);
-    }
-
-    .meter-container {
-      width: 100%;
-      height: 10px;
-      background: #111822;
-      border-radius: 5px;
-      overflow: hidden;
-      margin-top: 4px;
-      border: 1px solid #223147;
-    }
-
-    .meter-bar {
-      height: 100%;
-      width: 0%;
-      background: var(--green);
-      transition: width 0.05s linear;
+      background: rgba(57, 255, 20, 0.1);
     }
 
     .audio-test-box {
@@ -188,8 +167,12 @@
     .btn-yellow {
       border-color: var(--yellow);
       color: var(--yellow);
-      font-size: 0.75rem;
-      padding: 6px;
+      font-size: 0.74rem;
+      padding: 8px;
+    }
+    .btn-yellow:active {
+      background: var(--yellow);
+      color: #000;
     }
 
     .code-input {
@@ -272,27 +255,68 @@
       border-radius: 4px;
       cursor: pointer;
     }
+
+    /* Modal Calibration Overlay */
+    #calibModal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(3, 5, 8, 0.96);
+      z-index: 200;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 30px;
+      text-align: center;
+    }
+
+    .modal-step {
+      font-size: 1.25rem;
+      color: var(--yellow);
+      margin-bottom: 12px;
+      letter-spacing: 2px;
+    }
+
+    .modal-desc {
+      font-size: 0.82rem;
+      color: #b0c4de;
+      line-height: 1.5;
+      margin-bottom: 24px;
+    }
+
+    .meter-circle {
+      width: 120px;
+      height: 120px;
+      border: 2px solid var(--cyan);
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 1.1rem;
+      color: var(--cyan);
+      margin-bottom: 24px;
+      box-shadow: 0 0 20px rgba(0, 243, 255, 0.2);
+    }
   </style>
 </head>
 <body>
 
   <div class="container" id="lobby">
     <h1>AEROTENNIS</h1>
-    <div class="sub">Precision Spatial Audio Tennis</div>
+    <div class="sub">Kinematic Spatial Motion Tennis</div>
 
-    <!-- Real-Time Racket Monitor -->
-    <div class="diagnostic-box">
-      <div class="diag-title">
-        <span>LIVE RACKET FACE MONITOR</span>
-        <span id="testPwr">0.0 m/s²</span>
+    <!-- Hardware Sensor Profile -->
+    <div class="calib-box">
+      <div class="calib-title">
+        <span>HARDWARE MOTION PROFILE</span>
+        <span id="calibLabel">READY</span>
       </div>
-      <div class="racket-state" id="racketState">TAP "ACTIVATE MOTION SENSORS"</div>
-      <div class="meter-container">
-        <div class="meter-bar" id="meterBar"></div>
+      <div class="calib-slots">
+        <div class="calib-badge" id="fhBadge">FOREHAND: DEFAULT</div>
+        <div class="calib-badge" id="bhBadge">BACKHAND: DEFAULT</div>
       </div>
+      <button class="btn btn-yellow" id="btnRunWizard">CALIBRATE PHONE HARDWARE (5 SEC)</button>
     </div>
-
-    <button class="btn btn-yellow" id="btnInitSensors">1. ACTIVATE MOTION SENSORS</button>
 
     <div class="audio-test-box">
       <div style="font-size:0.72rem; color:var(--yellow); margin-bottom:4px;">
@@ -307,6 +331,17 @@
     <button class="btn" id="btnCreate">Create 2-Player Match</button>
     <input type="text" id="roomInput" class="code-input" placeholder="ROOM CODE" maxlength="6" />
     <button class="btn" id="btnJoin">Join Match</button>
+  </div>
+
+  <!-- CALIBRATION MODAL -->
+  <div id="calibModal">
+    <div class="modal-step" id="modalStepTitle">STEP 1 OF 2</div>
+    <div class="modal-desc" id="modalStepDesc">
+      Hold phone in right hand.<br/>
+      <b>Swing forward with the SCREEN facing forward.</b>
+    </div>
+    <div class="meter-circle" id="modalPwrMeter">SWING!</div>
+    <div style="font-size:0.75rem; color:var(--dim);">SWING FIRMLY FORWARD</div>
   </div>
 
   <!-- IN-GAME HUD -->
@@ -325,7 +360,8 @@
 
 <script>
 /**
- * 1. REALISTIC AUDIO SYNTHESIZER
+ * 1. REALISTIC AUDIO ENGINE (Web Audio API)
+ * Procedural Doppler ball whistle, racket ping, and hard stereo panning.
  */
 class AudioEngine {
   constructor() {
@@ -462,21 +498,25 @@ class AudioEngine {
 }
 
 /**
- * 2. MOTION SENSOR ENGINE
- * Direct forward thrust analysis with tilt cross-verification.
+ * 2. INITIAL-IMPULSE MOTION ENGINE (PlayStation Move Inspired)
+ * Evaluates the leading forward wave before braking deceleration occurs.
  */
 class MoveKinematicEngine {
-  constructor(onSwing, onDiagUpdate = null) {
+  constructor(onSwing) {
     this.onSwing = onSwing;
-    this.onDiagUpdate = onDiagUpdate;
     this.active = false;
     this.lockoutUntil = 0;
 
-    this.gravZ = 0;
-    this.alpha = 0.85;
+    // Load hardware polarity calibrated to this exact phone
+    this.fhSign = parseInt(localStorage.getItem('aero_fh_sign')) || 1;
+    this.bhSign = parseInt(localStorage.getItem('aero_bh_sign')) || -1;
 
-    // Minimum acceleration required to consider an action a deliberate hit
-    this.SWING_ACCEL_THRESHOLD = 4.2; // m/s²
+    // Rolling FIFO buffer of the last 10 frames (160ms) to analyze stroke wave
+    this.buffer = [];
+    this.gravZ = 0;
+    this.alpha = 0.82;
+
+    this.SWING_THRESHOLD = 4.0; // m/s² forward thrust
 
     this.onMotion = this.onMotion.bind(this);
   }
@@ -493,9 +533,17 @@ class MoveKinematicEngine {
     return true;
   }
 
+  setCalibration(fh, bh) {
+    this.fhSign = fh;
+    this.bhSign = bh;
+    localStorage.setItem('aero_fh_sign', fh);
+    localStorage.setItem('aero_bh_sign', bh);
+  }
+
   start() {
     this.active = true;
     this.lockoutUntil = 0;
+    this.buffer = [];
     this.gravZ = 0;
     window.addEventListener('devicemotion', this.onMotion, false);
   }
@@ -508,57 +556,53 @@ class MoveKinematicEngine {
   onMotion(e) {
     if (!this.active) return;
 
-    let ax = 0, ay = 0, az = 0;
-    let rawGz = 0;
-
+    let az = 0;
     if (e.acceleration && e.acceleration.z !== null && !isNaN(e.acceleration.z)) {
-      ax = e.acceleration.x || 0;
-      ay = e.acceleration.y || 0;
-      az = e.acceleration.z || 0;
-      if (e.accelerationIncludingGravity && e.accelerationIncludingGravity.z !== null) {
-        rawGz = e.accelerationIncludingGravity.z;
-      }
+      az = e.acceleration.z;
     } else if (e.accelerationIncludingGravity && e.accelerationIncludingGravity.z !== null) {
-      const g = e.accelerationIncludingGravity;
-      rawGz = g.z;
-      this.gravZ = this.alpha * this.gravZ + (1 - this.alpha) * g.z;
-      ax = (g.x || 0);
-      ay = (g.y || 0);
-      az = g.z - this.gravZ;
-    }
-
-    // Dynamic 3D vector power
-    const dynamicPower = Math.sqrt(ax * ax + ay * ay + az * az);
-
-    // Identify which side is facing outward during the stroke:
-    // Forehand: Screen faces forward into the swing path (az > 0 or rawGz > 1.5)
-    // Backhand: Wrist flips across body, back panel faces forward (az < 0 or rawGz < 1.5)
-    let currentFace = 'SCREEN';
-    if (az < -1.8 || (rawGz < 1.0 && az <= 1.0)) {
-      currentFace = 'BACK_PANEL';
-    } else {
-      currentFace = 'SCREEN';
-    }
-
-    // Live lobby diagnostic
-    if (this.onDiagUpdate) {
-      this.onDiagUpdate(currentFace, dynamicPower);
+      this.gravZ = this.alpha * this.gravZ + (1 - this.alpha) * e.accelerationIncludingGravity.z;
+      az = e.accelerationIncludingGravity.z - this.gravZ;
     }
 
     const now = performance.now();
+
+    // Maintain 10-frame FIFO buffer
+    this.buffer.push({ az, t: now });
+    if (this.buffer.length > 10) this.buffer.shift();
+
     if (now < this.lockoutUntil) return;
 
-    // Trigger physical swing
-    if (dynamicPower >= this.SWING_ACCEL_THRESHOLD) {
-      this.lockoutUntil = now + 650; // Lockout to ignore deceleration follow-through
-      this.onSwing(currentFace, dynamicPower);
+    // Detect swing impulse
+    if (Math.abs(az) >= this.SWING_THRESHOLD) {
+      // Find the initial impulse leading this strike to ignore follow-through braking
+      let firstLeadingSample = az;
+      for (let i = 0; i < this.buffer.length; i++) {
+        if (Math.abs(this.buffer[i].az) >= 2.5) {
+          firstLeadingSample = this.buffer[i].az;
+          break;
+        }
+      }
+
+      const impulseSign = firstLeadingSample > 0 ? 1 : -1;
+      let detectedFace = 'SCREEN';
+
+      if (impulseSign === this.fhSign) {
+        detectedFace = 'SCREEN';
+      } else if (impulseSign === this.bhSign) {
+        detectedFace = 'BACK_PANEL';
+      } else {
+        detectedFace = (az > 0) ? 'SCREEN' : 'BACK_PANEL';
+      }
+
+      this.lockoutUntil = now + 650; // Lock out sensor until follow-through finishes
+      this.onSwing(detectedFace, Math.abs(az));
     }
   }
 }
 
 /**
- * 3. AUTHORITATIVE TENNIS MATCH CONTROLLER
- * Zero-premature-miss architecture: lets player move freely during approach.
+ * 3. AUTHORITATIVE TENNIS CONTROLLER
+ * Gated Preparation Window + Multi-Tiered Sweet Spot.
  */
 class TennisMatchController {
   constructor(audio, role, sendPacket, motionEngine) {
@@ -634,7 +678,7 @@ class TennisMatchController {
 
       if (isMyServe) {
         this.state = 'AWAITING_SERVE';
-        this.updateHUD("YOUR SERVE", "SWING FORWARD TO STRIKE");
+        this.updateHUD("YOUR SERVE", "SWING FORWARD TO SERVE");
       } else {
         this.updateHUD("RECEIVING", "AWAITING OPPONENT SERVE");
         if (this.role === 'WALL') {
@@ -660,10 +704,10 @@ class TennisMatchController {
     this.audio.playBallApproach(dir, dur);
     this.updateHUD(
       dir === 1 ? "FOREHAND (RIGHT) ▶" : "◀ BACKHAND (LEFT)",
-      dir === 1 ? "SCREEN FORWARD" : "SCREEN FACES YOU -> BACK PANEL FORWARD"
+      dir === 1 ? "SCREEN FORWARD" : "BACK PANEL FORWARD"
     );
 
-    // Ball miss timeout: only triggers if the player never swings at all
+    // Timeout occurs only if the player fails to swing before the ball passes
     this.missTimeout = setTimeout(() => {
       if (this.state === 'BALL_IN_PLAY') {
         this.handleMiss("TOO LATE - MISSED BALL");
@@ -672,7 +716,7 @@ class TennisMatchController {
   }
 
   onSwing(face, forceVal) {
-    // 1. Serving
+    // 1. Serving Mode
     if (this.state === 'AWAITING_SERVE') {
       this.state = 'IDLE';
       this.audio.playHit();
@@ -691,14 +735,13 @@ class TennisMatchController {
       return;
     }
 
-    // 2. Ball In Play (Rally Hit)
+    // 2. Rally Mode
     if (this.state === 'BALL_IN_PLAY') {
       const elapsed = (performance.now() - this.ballStartTime) / 1000;
 
-      // IMMUNITY WINDOW: If arm is moving into position during the early approach (< 0.65s),
-      // ignore it safely so cross-body setup never triggers a premature miss!
+      // IMMUNITY WINDOW (0.0s - 0.70s): Ignore arm setup and wrist-turning motion
       if (elapsed < (this.flightTime - 0.65)) {
-        return;
+        return; // Arm crossing chest safely ignored
       }
 
       clearTimeout(this.missTimeout);
@@ -717,9 +760,15 @@ class TennisMatchController {
         return;
       }
 
-      // CLEAN HIT CONFIRMED!
+      // Timing Quality Rating
+      let timingLabel = "SWEET SPOT HIT!";
+      const delta = elapsed - this.flightTime;
+      if (delta < -0.22) timingLabel = "EARLY CROSS SHOT!";
+      else if (delta > 0.22) timingLabel = "LATE DEFENSIVE SHOT!";
+
+      // Clean Hit Confirmed
       this.audio.playHit();
-      this.updateHUD("CLEAN HIT!", `FORCE: ${forceVal.toFixed(1)} m/s² [${face}]`);
+      this.updateHUD(timingLabel, `FORCE: ${forceVal.toFixed(1)} m/s² [${face}]`);
 
       if (this.role === 'WALL') {
         setTimeout(() => this.audio.playBounce(), 450);
@@ -795,53 +844,81 @@ class TennisMatchController {
 }
 
 /**
- * 4. SYSTEM LIFECYCLE & LOBBY LOGIC
+ * 4. CALIBRATION WIZARD & APPLICATION BOOTSTRAP
  */
 const audio = new AudioEngine();
 let match = null;
 let peer = null;
 let conn = null;
 
-const motion = new MoveKinematicEngine(
-  (face, force) => {
-    if (match) match.onSwing(face, force);
-  },
-  (face, mag) => {
-    const badge = document.getElementById('racketState');
-    const bar = document.getElementById('meterBar');
-    const pwrText = document.getElementById('testPwr');
-
-    if (badge && document.getElementById('lobby').style.display !== 'none') {
-      if (face === 'SCREEN') {
-        badge.innerText = "FOREHAND (SCREEN OUTWARD)";
-        badge.className = "racket-state forehand";
-      } else {
-        badge.innerText = "BACKHAND (BACK PANEL OUTWARD)";
-        badge.className = "racket-state backhand";
-      }
-
-      if (pwrText) pwrText.innerText = mag.toFixed(1) + " m/s²";
-      if (bar) {
-        const pct = Math.min(100, (mag / 12.0) * 100);
-        bar.style.width = pct + "%";
-        bar.style.background = mag >= 4.2 ? "var(--cyan)" : "var(--green)";
-      }
-    }
-  }
-);
-
-document.getElementById('btnInitSensors').addEventListener('click', async () => {
-  const ok = await motion.requestPermission();
-  if (ok) {
-    motion.start();
-    audio.init();
-    document.getElementById('btnInitSensors').style.display = 'none';
-    document.getElementById('statusText').innerText = "Sensors Active! Test Forehand and Backhand above.";
-  } else {
-    alert("Motion sensor permission denied.");
-  }
+const motion = new MoveKinematicEngine((face, force) => {
+  if (match) match.onSwing(face, force);
 });
 
+function refreshCalibBadges() {
+  const fh = motion.fhSign === 1 ? "+Z (NORMAL)" : "-Z (INVERTED)";
+  const bh = motion.bhSign === 1 ? "+Z (INVERTED)" : "-Z (NORMAL)";
+  document.getElementById('fhBadge').innerText = `FOREHAND: ${fh}`;
+  document.getElementById('bhBadge').innerText = `BACKHAND: ${bh}`;
+  document.getElementById('fhBadge').className = "calib-badge ready";
+  document.getElementById('bhBadge').className = "calib-badge ready";
+  document.getElementById('calibLabel').innerText = "CALIBRATED";
+  document.getElementById('calibLabel').style.color = "var(--green)";
+}
+refreshCalibBadges();
+
+// 5-Second Hardware Calibrator Wizard
+let wizardStep = 0;
+let tempFh = 1;
+let tempBh = -1;
+
+document.getElementById('btnRunWizard').addEventListener('click', async () => {
+  const ok = await motion.requestPermission();
+  if (!ok) {
+    alert("Motion sensor access required.");
+    return;
+  }
+
+  wizardStep = 1;
+  document.getElementById('calibModal').style.display = 'flex';
+  document.getElementById('modalStepTitle').innerText = "STEP 1 OF 2: FOREHAND";
+  document.getElementById('modalStepDesc').innerHTML = 
+    "Hold phone in right hand.<br/><b>Swing forward firmly with the SCREEN facing forward.</b>";
+  document.getElementById('modalPwrMeter').innerText = "SWING!";
+
+  const wizardListener = (e) => {
+    let az = 0;
+    if (e.acceleration && e.acceleration.z !== null && !isNaN(e.acceleration.z)) {
+      az = e.acceleration.z;
+    } else if (e.accelerationIncludingGravity && e.accelerationIncludingGravity.z !== null) {
+      az = e.accelerationIncludingGravity.z;
+    }
+
+    if (Math.abs(az) >= 4.0) {
+      if (wizardStep === 1) {
+        tempFh = az > 0 ? 1 : -1;
+        wizardStep = 2;
+        document.getElementById('modalStepTitle').innerText = "STEP 2 OF 2: BACKHAND";
+        document.getElementById('modalStepDesc').innerHTML = 
+          "Cross your arm across your chest.<br/><b>Swing forward with the BACK PANEL facing forward.</b>";
+        document.getElementById('modalPwrMeter').innerText = "SWING!";
+      } else if (wizardStep === 2) {
+        tempBh = az > 0 ? 1 : -1;
+        window.removeEventListener('devicemotion', wizardListener, false);
+        motion.setCalibration(tempFh, tempBh);
+        document.getElementById('calibModal').style.display = 'none';
+        refreshCalibBadges();
+        alert("Calibration successful! Your phone's exact hardware signs have been saved.");
+      }
+    }
+  };
+
+  setTimeout(() => {
+    window.addEventListener('devicemotion', wizardListener, false);
+  }, 350);
+});
+
+// Audio Stereo Verification
 document.getElementById('btnAudioTest').addEventListener('click', () => {
   const btn = document.getElementById('btnAudioTest');
   btn.innerText = "Playing in LEFT ear...";
@@ -866,17 +943,16 @@ function launchGame(title) {
   }
 }
 
+// 1. Solo Wall Practice
 document.getElementById('btnWall').addEventListener('click', async () => {
   const ok = await motion.requestPermission();
-  if (!ok) {
-    alert("Motion sensor access required.");
-    return;
-  }
+  if (!ok) return;
   launchGame("SOLO WALL PRACTICE");
   match = new TennisMatchController(audio, 'WALL', null, motion);
   match.start();
 });
 
+// 2. Create Multiplayer Match (Host)
 document.getElementById('btnCreate').addEventListener('click', async () => {
   const ok = await motion.requestPermission();
   if (!ok) return;
@@ -904,9 +980,10 @@ document.getElementById('btnCreate').addEventListener('click', async () => {
     else conn.on('open', onOpen);
   });
 
-  peer.on('error', (e) => alert("P2P Error: " + e.type));
+  peer.on('error', (e) => alert("P2P Signaling Error: " + e.type));
 });
 
+// 3. Join Match (Guest)
 document.getElementById('btnJoin').addEventListener('click', async () => {
   const code = document.getElementById('roomInput').value.trim().toUpperCase();
   if (code.length < 4) {

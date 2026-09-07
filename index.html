@@ -1,1028 +1,1577 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0, viewport-fit=cover" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <title>AeroTennis | Precision Motion Tennis</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#05070a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>AeroTennis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#05070a;
+    --panel:#0c141b;
+    --panel-border:#1c2b35;
+    --green:#3dffa0;
+    --cyan:#27d8ff;
+    --pink:#ff4270;
+    --text:#dce8ec;
+    --dim:#5f7480;
+    --font-display:'Chakra Petch',sans-serif;
+    --font-body:'Inter',system-ui,-apple-system,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    height:100%;
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--font-body);
+    overscroll-behavior:none;
+    -webkit-tap-highlight-color:transparent;
+  }
+  body{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
+    touch-action:manipulation;
+    user-select:none;
+    padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  #app{
+    position:relative;
+    width:100%;
+    max-width:520px;
+    height:100dvh;
+    display:flex;
+    flex-direction:column;
+  }
+  .screen{
+    display:none;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    flex:1;
+    padding:28px 24px;
+    text-align:center;
+    gap:16px;
+  }
+  .screen.active{display:flex;}
 
-  <!-- PeerJS for WebRTC Direct Device-to-Device Matchmaking -->
-  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+  .logo{
+    font-family:var(--font-display);
+    font-weight:900;
+    font-size:clamp(30px,8vw,44px);
+    letter-spacing:1px;
+    margin:0;
+    color:var(--text);
+  }
+  .logo span{color:var(--green);}
+  .tagline{color:var(--dim);margin:-8px 0 8px;font-size:15px;}
 
-  <style>
-    :root {
-      --bg: #030508;
-      --panel: #090e17;
-      --cyan: #00f3ff;
-      --green: #39ff14;
-      --red: #ff0055;
-      --yellow: #ffd700;
-      --dim: #60738a;
-      --border: #142033;
-      --font: 'Courier New', Courier, monospace;
-    }
+  p{line-height:1.5;margin:0;}
+  .muted{color:var(--dim);font-size:14px;}
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      user-select: none;
-      -webkit-user-select: none;
-      touch-action: none;
-    }
+  .btn{
+    font-family:var(--font-body);
+    font-weight:600;
+    font-size:16px;
+    padding:15px 26px;
+    border-radius:14px;
+    border:1px solid var(--panel-border);
+    background:var(--panel);
+    color:var(--text);
+    width:100%;
+    max-width:320px;
+    cursor:pointer;
+    transition:transform .12s ease, border-color .12s ease, background .12s ease;
+  }
+  .btn:active{transform:scale(0.97);}
+  .btn-primary{
+    background:linear-gradient(180deg,#123023,#0c1a15);
+    border-color:var(--green);
+    color:var(--green);
+    box-shadow:0 0 22px -6px rgba(61,255,160,0.55);
+  }
+  .btn-secondary{border-color:var(--cyan);color:var(--cyan);}
+  .btn-ghost{background:transparent;border-color:transparent;color:var(--dim);font-weight:500;font-size:14px;padding:8px;}
+  .btn-danger{border-color:var(--pink);color:var(--pink);}
+  .btn:disabled{opacity:0.35;cursor:not-allowed;}
 
-    body {
-      background-color: var(--bg);
-      color: #fff;
-      font-family: var(--font);
-      height: 100vh;
-      width: 100vw;
-      overflow: hidden;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
+  .stack{display:flex;flex-direction:column;gap:12px;width:100%;align-items:center;}
 
-    .container {
-      width: 94%;
-      max-width: 440px;
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 20px;
-      text-align: center;
-      box-shadow: 0 0 30px rgba(0, 243, 255, 0.12);
-      max-height: 96vh;
-      overflow-y: auto;
-    }
+  .checklist{width:100%;max-width:320px;display:flex;flex-direction:column;gap:8px;margin:6px 0;}
+  .check-item{
+    display:flex;align-items:center;gap:10px;
+    padding:10px 12px;border:1px solid var(--panel-border);border-radius:10px;
+    background:var(--panel);font-size:13px;color:var(--dim);text-align:left;
+  }
+  .check-item.ok{border-color:var(--green);color:var(--green);}
+  .check-item.bad{border-color:var(--pink);color:var(--pink);}
+  .check-dot{width:8px;height:8px;border-radius:50%;background:currentColor;flex:none;}
 
-    h1 {
-      font-size: 2.1rem;
-      letter-spacing: 4px;
-      color: var(--cyan);
-      text-shadow: 0 0 14px rgba(0, 243, 255, 0.5);
-      margin-bottom: 2px;
-    }
+  .error-text{color:var(--pink);font-size:14px;max-width:320px;}
 
-    .sub {
-      font-size: 0.70rem;
-      color: var(--green);
-      letter-spacing: 2px;
-      margin-bottom: 12px;
-    }
+  input.code-input{
+    font-family:var(--font-display);
+    font-size:34px;
+    letter-spacing:8px;
+    text-align:center;
+    width:100%;
+    max-width:280px;
+    padding:14px 10px 14px 18px;
+    border-radius:14px;
+    border:1px solid var(--panel-border);
+    background:var(--panel);
+    color:var(--cyan);
+  }
+  input.code-input:focus{outline:none;border-color:var(--cyan);}
 
-    /* Hardware Calibration Panel */
-    .calib-box {
-      background: rgba(0, 0, 0, 0.5);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 12px;
-      margin-bottom: 12px;
-      text-align: left;
-    }
+  .code-display{
+    font-family:var(--font-display);
+    font-size:40px;
+    letter-spacing:6px;
+    color:var(--cyan);
+    text-shadow:0 0 18px rgba(39,216,255,0.55);
+  }
 
-    .calib-title {
-      font-size: 0.74rem;
-      color: var(--yellow);
-      letter-spacing: 1px;
-      margin-bottom: 8px;
-      font-weight: bold;
-      display: flex;
-      justify-content: space-between;
-    }
+  .pulse-ring{
+    width:64px;height:64px;border-radius:50%;
+    border:2px solid var(--cyan);
+    animation:pulse 1.6s ease-out infinite;
+  }
+  @keyframes pulse{
+    0%{transform:scale(0.6);opacity:0.9;}
+    100%{transform:scale(2.2);opacity:0;}
+  }
 
-    .calib-slots {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      margin-bottom: 8px;
-    }
+  /* ---- in-game HUD ---- */
+  #screen-game{padding:18px 18px;justify-content:space-between;}
+  #game-hud{width:100%;}
+  .score-row{display:flex;align-items:flex-start;justify-content:space-between;width:100%;}
+  .score-player{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:90px;}
+  .score-player .label{font-size:12px;color:var(--dim);}
+  .score-value{font-family:var(--font-display);font-size:44px;font-weight:800;}
+  .score-player.you .score-value{color:var(--green);}
+  .score-player.opp .score-value{color:var(--cyan);}
+  .score-mid{color:var(--dim);font-size:13px;padding-top:14px;}
+  #deuce-banner{font-size:13px;color:var(--pink);margin-top:4px;height:16px;}
+  #serve-indicator{font-size:13px;color:var(--dim);margin-top:2px;}
 
-    .calib-badge {
-      padding: 8px 4px;
-      border-radius: 4px;
-      font-size: 0.72rem;
-      font-weight: bold;
-      text-align: center;
-      background: #0f1724;
-      border: 1px solid #1f2f47;
-      color: var(--dim);
-    }
-    .calib-badge.ready {
-      border-color: var(--green);
-      color: var(--green);
-      background: rgba(57, 255, 20, 0.1);
-    }
+  #sonar-stage{
+    position:relative;
+    flex:1;
+    width:100%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-height:0;
+  }
+  #sonar-ring{
+    --progress:0;
+    width:120px;height:120px;border-radius:50%;
+    border:2px solid var(--green);
+    transform:scale(calc(0.3 + var(--progress) * 1.3));
+    opacity:calc(0.2 + var(--progress) * 0.7);
+  }
+  @media (prefers-reduced-motion: reduce){
+    #sonar-ring{transform:none;opacity:0.6;}
+  }
+  #sonar-core{
+    position:absolute;width:14px;height:14px;border-radius:50%;
+    background:var(--text);box-shadow:0 0 14px 4px rgba(220,232,236,0.5);
+  }
+  .side-glow{
+    position:absolute;top:0;bottom:0;width:35%;
+    opacity:0;transition:opacity .15s ease;
+    pointer-events:none;
+  }
+  #side-glow-left{left:0;background:linear-gradient(90deg,rgba(39,216,255,0.28),transparent);}
+  #side-glow-right{right:0;background:linear-gradient(270deg,rgba(39,216,255,0.28),transparent);}
+  .side-glow.active{opacity:1;}
 
-    .audio-test-box {
-      background: rgba(255, 215, 0, 0.06);
-      border: 1px solid var(--yellow);
-      border-radius: 6px;
-      padding: 8px;
-      margin-bottom: 12px;
-    }
+  #sonar-stage.flash-hit #sonar-ring{border-color:var(--green);}
+  #sonar-stage.flash-miss #sonar-ring{border-color:var(--pink);}
 
-    .status-panel {
-      font-size: 0.80rem;
-      color: var(--dim);
-      border: 1px dashed var(--border);
-      padding: 8px;
-      border-radius: 6px;
-      margin-bottom: 10px;
-      min-height: 40px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
+  #game-status-text{color:var(--dim);font-size:14px;min-height:20px;}
+  #wall-streak{color:var(--cyan);font-size:13px;}
 
-    .btn {
-      width: 100%;
-      background: transparent;
-      border: 1px solid var(--cyan);
-      color: var(--cyan);
-      font-family: inherit;
-      padding: 12px;
-      font-size: 0.90rem;
-      font-weight: bold;
-      letter-spacing: 2px;
-      border-radius: 6px;
-      cursor: pointer;
-      margin: 4px 0;
-    }
-    .btn:active {
-      background: var(--cyan);
-      color: var(--bg);
-    }
+  .btn-quit{
+    background:transparent;border:1px solid var(--panel-border);color:var(--dim);
+    font-size:13px;padding:9px 18px;border-radius:10px;
+  }
 
-    .btn-green {
-      border-color: var(--green);
-      color: var(--green);
-    }
-    .btn-green:active {
-      background: var(--green);
-      color: var(--bg);
-    }
+  .manual-controls{display:flex;gap:12px;width:100%;justify-content:center;margin-top:4px;}
+  .manual-controls button{
+    flex:1;max-width:150px;padding:16px 6px;border-radius:12px;
+    border:1px solid var(--cyan);background:var(--panel);color:var(--cyan);font-family:var(--font-body);font-weight:600;
+  }
+  .manual-controls button:active{transform:scale(0.96);}
 
-    .btn-yellow {
-      border-color: var(--yellow);
-      color: var(--yellow);
-      font-size: 0.74rem;
-      padding: 8px;
-    }
-    .btn-yellow:active {
-      background: var(--yellow);
-      color: #000;
-    }
+  .settings-row{display:flex;flex-direction:column;gap:8px;width:100%;max-width:320px;text-align:left;}
+  .settings-row label{font-size:13px;color:var(--dim);}
+  select, .toggle-row{
+    font-family:var(--font-body);
+    background:var(--panel);border:1px solid var(--panel-border);color:var(--text);
+    border-radius:10px;padding:10px 12px;font-size:15px;width:100%;
+  }
+  .toggle-row{display:flex;align-items:center;justify-content:space-between;gap:10px;}
 
-    .code-input {
-      width: 100%;
-      padding: 10px;
-      background: rgba(0,0,0,0.5);
-      border: 1px solid var(--border);
-      color: var(--green);
-      font-size: 1.10rem;
-      font-family: inherit;
-      text-align: center;
-      letter-spacing: 4px;
-      border-radius: 6px;
-      margin: 5px 0;
-      text-transform: uppercase;
-      outline: none;
-    }
-    .code-input:focus { border-color: var(--cyan); }
+  .tip-list{width:100%;max-width:320px;text-align:left;color:var(--dim);font-size:13px;line-height:1.6;padding-left:18px;margin:0;}
 
-    /* IN-GAME HUD */
-    #hud {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: #000;
-      z-index: 100;
-      flex-direction: column;
-      justify-content: space-between;
-      align-items: center;
-      padding: 44px 20px;
-      text-align: center;
-    }
-
-    .hud-header {
-      font-size: 0.85rem;
-      letter-spacing: 3px;
-      color: var(--dim);
-    }
-
-    .hud-score {
-      font-size: 2.8rem;
-      letter-spacing: 6px;
-      color: var(--cyan);
-      text-shadow: 0 0 20px var(--cyan);
-      margin: 8px 0;
-    }
-
-    .hud-turn {
-      font-size: 1rem;
-      color: var(--green);
-      letter-spacing: 2px;
-    }
-
-    .hud-feedback {
-      font-size: 1.4rem;
-      letter-spacing: 2px;
-      color: #fff;
-      min-height: 60px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-transform: uppercase;
-    }
-
-    .hud-telemetry {
-      font-size: 0.75rem;
-      color: var(--dim);
-      margin-top: 4px;
-      letter-spacing: 1px;
-    }
-
-    .hud-quit {
-      border: 1px solid var(--red);
-      color: var(--red);
-      background: transparent;
-      padding: 10px 24px;
-      font-family: inherit;
-      font-size: 0.85rem;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-
-    /* Modal Calibration Overlay */
-    #calibModal {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(3, 5, 8, 0.96);
-      z-index: 200;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      padding: 30px;
-      text-align: center;
-    }
-
-    .modal-step {
-      font-size: 1.25rem;
-      color: var(--yellow);
-      margin-bottom: 12px;
-      letter-spacing: 2px;
-    }
-
-    .modal-desc {
-      font-size: 0.82rem;
-      color: #b0c4de;
-      line-height: 1.5;
-      margin-bottom: 24px;
-    }
-
-    .meter-circle {
-      width: 120px;
-      height: 120px;
-      border: 2px solid var(--cyan);
-      border-radius: 50%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-size: 1.1rem;
-      color: var(--cyan);
-      margin-bottom: 24px;
-      box-shadow: 0 0 20px rgba(0, 243, 255, 0.2);
-    }
-  </style>
+  footer.hint{position:absolute;bottom:6px;left:0;right:0;text-align:center;color:var(--panel-border);font-size:11px;}
+</style>
 </head>
 <body>
+<div id="app">
 
-  <div class="container" id="lobby">
-    <h1>AEROTENNIS</h1>
-    <div class="sub">Kinematic Spatial Motion Tennis</div>
+  <section id="screen-boot" class="screen active">
+    <h1 class="logo">AERO<span>TENNIS</span></h1>
+    <p class="tagline">Tennis you play with your ears.</p>
+    <div id="boot-checklist" class="checklist"></div>
+    <div class="stack">
+      <button id="btn-start" class="btn btn-primary">Tap to begin</button>
+      <label class="muted" style="display:flex;align-items:center;gap:8px;">
+        <input type="checkbox" id="chk-manual"> I can't use motion controls — use tap buttons instead
+      </label>
+    </div>
+    <p id="boot-error" class="error-text" hidden></p>
+  </section>
 
-    <!-- Hardware Sensor Profile -->
-    <div class="calib-box">
-      <div class="calib-title">
-        <span>HARDWARE MOTION PROFILE</span>
-        <span id="calibLabel">READY</span>
+  <section id="screen-headphones" class="screen">
+    <h2 style="margin:0;">Check your headphones</h2>
+    <p class="muted">Put your headphones on, then test each ear. The whole game depends on hearing left and right clearly.</p>
+    <div class="stack" style="flex-direction:row;gap:12px;">
+      <button id="btn-test-left" class="btn btn-secondary">Test left ear</button>
+      <button id="btn-test-right" class="btn btn-secondary">Test right ear</button>
+    </div>
+    <p class="muted" id="headphone-question">Did the tone play clearly on the correct side?</p>
+    <div class="stack" style="flex-direction:row;gap:12px;">
+      <button id="btn-headphones-yes" class="btn btn-primary" style="max-width:150px;">Yes</button>
+      <button id="btn-headphones-no" class="btn" style="max-width:150px;">Not quite</button>
+    </div>
+    <div id="headphone-tips" hidden>
+      <ul class="tip-list">
+        <li>Make sure headphones are actually plugged in or paired over Bluetooth.</li>
+        <li>Check your phone's media volume, not just ringer volume.</li>
+        <li>Unplug and replug (or reconnect Bluetooth) and test again.</li>
+      </ul>
+      <button id="btn-headphones-anyway" class="btn-ghost">Continue anyway</button>
+    </div>
+  </section>
+
+  <section id="screen-calibrate" class="screen">
+    <h2 style="margin:0;">Quick calibration</h2>
+    <p class="muted">Every phone reads its sensors a little differently, so let's learn your swing before we start.</p>
+    <div class="pulse-ring"></div>
+    <p id="calib-instruction"><strong>Screen facing forward</strong> — swing your arm forward once, like a forehand, as if the front of the phone is hitting the ball.</p>
+    <p id="calib-status" class="muted">Waiting for your swing…</p>
+    <div class="stack" style="flex-direction:row;gap:12px;">
+      <button id="btn-calib-retry" class="btn" hidden>Try again</button>
+      <button id="btn-calib-skip" class="btn-ghost">Skip (use default)</button>
+    </div>
+  </section>
+
+  <section id="screen-menu" class="screen">
+    <h1 class="logo" style="font-size:26px;">AERO<span>TENNIS</span></h1>
+    <div class="stack">
+      <button id="btn-create" class="btn btn-primary">Create match</button>
+      <button id="btn-join" class="btn btn-secondary">Join match</button>
+      <button id="btn-wall" class="btn">Practice · Wall mode</button>
+      <button id="btn-settings" class="btn-ghost">Sensitivity settings</button>
+    </div>
+    <p id="menu-net-note" class="muted" hidden>Online multiplayer isn't available in this environment right now — Wall mode still works fully.</p>
+  </section>
+
+  <section id="screen-settings" class="screen">
+    <h2 style="margin:0;">Swing sensitivity</h2>
+    <div class="settings-row">
+      <label for="sensitivity-select">How hard do you tend to swing?</label>
+      <select id="sensitivity-select">
+        <option value="high">Light flick — most sensitive</option>
+        <option value="medium" selected>Normal swing</option>
+        <option value="low">Full power — least sensitive</option>
+      </select>
+    </div>
+    <button id="btn-recalibrate" class="btn btn-secondary">Redo swing calibration</button>
+    <button class="btn-ghost" data-target="screen-menu">Back</button>
+  </section>
+
+  <section id="screen-join" class="screen">
+    <h2 style="margin:0;">Join a match</h2>
+    <input id="input-room-code" class="code-input" maxlength="6" inputmode="numeric" pattern="[0-9]*" placeholder="000000">
+    <button id="btn-join-confirm" class="btn btn-primary">Join</button>
+    <p id="join-error" class="error-text" hidden></p>
+    <button class="btn-ghost" data-target="screen-menu">Back</button>
+  </section>
+
+  <section id="screen-lobby" class="screen">
+    <p class="muted" id="lobby-label">Room code</p>
+    <div id="lobby-code" class="code-display"></div>
+    <div class="pulse-ring"></div>
+    <p id="lobby-status" class="muted">Waiting for opponent…</p>
+    <button id="btn-lobby-cancel" class="btn-ghost">Cancel</button>
+  </section>
+
+  <section id="screen-game" class="screen">
+    <div id="game-hud">
+      <div class="score-row">
+        <div class="score-player you">
+          <span class="label">You</span>
+          <span id="score-you" class="score-value">0</span>
+        </div>
+        <div class="score-mid" id="game-score-mid">Games 0–0</div>
+        <div class="score-player opp">
+          <span class="label">Opponent</span>
+          <span id="score-opp" class="score-value">0</span>
+        </div>
       </div>
-      <div class="calib-slots">
-        <div class="calib-badge" id="fhBadge">FOREHAND: DEFAULT</div>
-        <div class="calib-badge" id="bhBadge">BACKHAND: DEFAULT</div>
-      </div>
-      <button class="btn btn-yellow" id="btnRunWizard">CALIBRATE PHONE HARDWARE (5 SEC)</button>
+      <div id="deuce-banner"></div>
+      <div id="serve-indicator"></div>
     </div>
 
-    <div class="audio-test-box">
-      <div style="font-size:0.72rem; color:var(--yellow); margin-bottom:4px;">
-        🎧 <b>STEREO EARPHONES TEST</b>
-      </div>
-      <button class="btn btn-yellow" id="btnAudioTest">Play Left/Right Audio Channels</button>
+    <div id="sonar-stage">
+      <div id="side-glow-left" class="side-glow"></div>
+      <div id="sonar-ring"></div>
+      <div id="sonar-core"></div>
+      <div id="side-glow-right" class="side-glow"></div>
     </div>
 
-    <div class="status-panel" id="statusText">Hold Phone horizontally in Right Hand</div>
+    <p id="game-status-text">—</p>
+    <p id="wall-streak" hidden>Streak: 0</p>
 
-    <button class="btn btn-green" id="btnWall">Solo Wall Practice</button>
-    <button class="btn" id="btnCreate">Create 2-Player Match</button>
-    <input type="text" id="roomInput" class="code-input" placeholder="ROOM CODE" maxlength="6" />
-    <button class="btn" id="btnJoin">Join Match</button>
-  </div>
+    <div id="manual-controls" class="manual-controls" hidden>
+      <button id="btn-manual-left">◀ BACK (Left)</button>
+      <button id="btn-manual-right">SCREEN (Right) ▶</button>
+    </div>
 
-  <!-- CALIBRATION MODAL -->
-  <div id="calibModal">
-    <div class="modal-step" id="modalStepTitle">STEP 1 OF 2</div>
-    <div class="modal-desc" id="modalStepDesc">
-      Hold phone in right hand.<br/>
-      <b>Swing forward with the SCREEN facing forward.</b>
-    </div>
-    <div class="meter-circle" id="modalPwrMeter">SWING!</div>
-    <div style="font-size:0.75rem; color:var(--dim);">SWING FIRMLY FORWARD</div>
-  </div>
+    <button id="btn-quit" class="btn-quit">Quit</button>
+  </section>
 
-  <!-- IN-GAME HUD -->
-  <div id="hud">
-    <div>
-      <div class="hud-header" id="hudMode">ARENA</div>
-      <div class="hud-score" id="hudScore">0 - 0</div>
-      <div class="hud-turn" id="hudServer">INITIALIZING</div>
+  <section id="screen-postgame" class="screen">
+    <h2 id="postgame-title" style="margin:0;"></h2>
+    <p id="postgame-detail" class="muted"></p>
+    <div class="stack">
+      <button id="btn-rematch" class="btn btn-primary">Rematch</button>
+      <button id="btn-menu" class="btn">Main menu</button>
     </div>
-    <div class="hud-feedback">
-      <div id="hudFeedbackMain">HOLD READY</div>
-      <div class="hud-telemetry" id="hudTelemetry">STANDBY</div>
-    </div>
-    <button class="hud-quit" id="btnQuit">EXIT MATCH</button>
-  </div>
+  </section>
+
+  <footer class="hint">Hold your phone sideways, like a racket handle.</footer>
+</div>
 
 <script>
-/**
- * 1. REALISTIC AUDIO ENGINE (Web Audio API)
- * Procedural Doppler ball whistle, racket ping, and hard stereo panning.
- */
-class AudioEngine {
-  constructor() {
-    this.ctx = null;
+(() => {
+"use strict";
+
+/* =========================================================================
+   CONSTANTS
+   ========================================================================= */
+const SWING_PRESETS = { high: 7.5, medium: 11, low: 15.5 };
+let SWING_MAGNITUDE_THRESHOLD = SWING_PRESETS.medium;
+const SWING_Z_DEADZONE = 1.1;
+const SWING_COOLDOWN_MS = 420;
+const SWING_FALL_RATIO = 0.7;
+
+const SHOT = {
+  MIN_TRAVEL_MS: 650,
+  MAX_TRAVEL_MS: 1500,
+  RALLY_SPEEDUP_STEP_MS: 45,
+  SWEET_SPOT_MS: 240,
+  SERVE_WINDOW_MS: 6000
+};
+
+function hasStorage(){ return (typeof window.storage !== "undefined"); }
+
+/* =========================================================================
+   SMALL UTILITIES
+   ========================================================================= */
+function clamp(v, lo, hi){ return Math.max(lo, Math.min(hi, v)); }
+function randRange(a, b){ return a + Math.random() * (b - a); }
+function hasWonBy2(a, b, minToWin){ return (a >= minToWin || b >= minToWin) && Math.abs(a - b) >= 2; }
+function formatCode(code){ return code.length === 6 ? code.slice(0,3) + " " + code.slice(3) : code; }
+
+const POINT_NAMES = ["Love", "15", "30", "40"];
+function getPointState(a, b){
+  if (a >= 3 && b >= 3){
+    if (a === b) return { type: "deuce" };
+    return { type: "advantage", aLeads: a > b };
   }
-
-  init() {
-    if (!this.ctx) {
-      const AudioCtx = window.AudioContext || window.webkitAudioContext;
-      this.ctx = new AudioCtx();
-    }
-    if (this.ctx.state === 'suspended') {
-      this.ctx.resume();
-    }
-  }
-
-  playTestTone(dir, freq, onDone) {
-    this.init();
-    const t0 = this.ctx.currentTime;
-    const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
-    const panner = this.ctx.createStereoPanner();
-
-    osc.frequency.setValueAtTime(freq, t0);
-    panner.pan.setValueAtTime(dir, t0);
-    gain.gain.setValueAtTime(0.3, t0);
-    gain.gain.exponentialRampToValueAtTime(0.001, t0 + 0.35);
-
-    osc.connect(gain);
-    gain.connect(panner);
-    panner.connect(this.ctx.destination);
-
-    osc.start(t0);
-    osc.stop(t0 + 0.36);
-    setTimeout(onDone, 400);
-  }
-
-  playBallApproach(direction, duration) {
-    if (!this.ctx) return;
-    const t0 = this.ctx.currentTime;
-    const tEnd = t0 + duration;
-
-    const bufferSize = Math.floor(this.ctx.sampleRate * duration);
-    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) {
-      data[i] = Math.random() * 2 - 1;
-    }
-
-    const noise = this.ctx.createBufferSource();
-    noise.buffer = buffer;
-
-    const filter = this.ctx.createBiquadFilter();
-    filter.type = 'bandpass';
-    filter.frequency.setValueAtTime(360, t0);
-    filter.frequency.exponentialRampToValueAtTime(940, tEnd);
-    filter.Q.setValueAtTime(4.0, t0);
-
-    const gain = this.ctx.createGain();
-    gain.gain.setValueAtTime(0.01, t0);
-    gain.gain.exponentialRampToValueAtTime(1.0, tEnd);
-
-    const panner = this.ctx.createStereoPanner();
-    panner.pan.setValueAtTime(direction, t0);
-
-    noise.connect(filter);
-    filter.connect(gain);
-    gain.connect(panner);
-    panner.connect(this.ctx.destination);
-
-    noise.start(t0);
-    noise.stop(tEnd + 0.05);
-  }
-
-  playHit() {
-    if (!this.ctx) return;
-    const t0 = this.ctx.currentTime;
-
-    const osc = this.ctx.createOscillator();
-    const g = this.ctx.createGain();
-    osc.type = 'triangle';
-    osc.frequency.setValueAtTime(650, t0);
-    osc.frequency.exponentialRampToValueAtTime(120, t0 + 0.08);
-    g.gain.setValueAtTime(1.0, t0);
-    g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.08);
-    osc.connect(g);
-    g.connect(this.ctx.destination);
-    osc.start(t0);
-    osc.stop(t0 + 0.09);
-
-    const pop = this.ctx.createOscillator();
-    const pg = this.ctx.createGain();
-    pop.type = 'sine';
-    pop.frequency.setValueAtTime(160, t0);
-    pop.frequency.linearRampToValueAtTime(40, t0 + 0.05);
-    pg.gain.setValueAtTime(0.8, t0);
-    pg.gain.linearRampToValueAtTime(0.001, t0 + 0.05);
-    pop.connect(pg);
-    pg.connect(this.ctx.destination);
-    pop.start(t0);
-    pop.stop(t0 + 0.06);
-  }
-
-  playWhiff() {
-    if (!this.ctx) return;
-    const t0 = this.ctx.currentTime;
-    const osc = this.ctx.createOscillator();
-    const g = this.ctx.createGain();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(280, t0);
-    osc.frequency.exponentialRampToValueAtTime(70, t0 + 0.16);
-    g.gain.setValueAtTime(0.35, t0);
-    g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.16);
-    osc.connect(g);
-    g.connect(this.ctx.destination);
-    osc.start(t0);
-    osc.stop(t0 + 0.17);
-  }
-
-  playBounce() {
-    if (!this.ctx) return;
-    const t0 = this.ctx.currentTime;
-    const osc = this.ctx.createOscillator();
-    const g = this.ctx.createGain();
-    osc.frequency.setValueAtTime(160, t0);
-    osc.frequency.exponentialRampToValueAtTime(40, t0 + 0.12);
-    g.gain.setValueAtTime(0.6, t0);
-    g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.12);
-    osc.connect(g);
-    g.connect(this.ctx.destination);
-    osc.start(t0);
-    osc.stop(t0 + 0.13);
-  }
+  return { type: "normal", aLabel: POINT_NAMES[a], bLabel: POINT_NAMES[b] };
 }
 
-/**
- * 2. INITIAL-IMPULSE MOTION ENGINE (PlayStation Move Inspired)
- * Evaluates the leading forward wave before braking deceleration occurs.
- */
-class MoveKinematicEngine {
-  constructor(onSwing) {
-    this.onSwing = onSwing;
-    this.active = false;
-    this.lockoutUntil = 0;
+/* =========================================================================
+   AUDIO ENGINE
+   All sound is synthesized with the Web Audio API — no external audio
+   files, so the game works completely offline once loaded.
+   ========================================================================= */
+const AudioEngine = (() => {
+  let ctx = null;
+  let master = null;
+  let noiseBuffer = null;
 
-    // Load hardware polarity calibrated to this exact phone
-    this.fhSign = parseInt(localStorage.getItem('aero_fh_sign')) || 1;
-    this.bhSign = parseInt(localStorage.getItem('aero_bh_sign')) || -1;
+  function init(){
+    if (ctx) return;
+    ctx = new (window.AudioContext || window.webkitAudioContext)();
+    master = ctx.createGain();
+    master.gain.value = 0.9;
+    master.connect(ctx.destination);
+  }
+  function resume(){ if (ctx && ctx.state === "suspended") ctx.resume(); }
+  function isReady(){ return !!ctx; }
 
-    // Rolling FIFO buffer of the last 10 frames (160ms) to analyze stroke wave
-    this.buffer = [];
-    this.gravZ = 0;
-    this.alpha = 0.82;
-
-    this.SWING_THRESHOLD = 4.0; // m/s² forward thrust
-
-    this.onMotion = this.onMotion.bind(this);
+  function getNoiseBuffer(){
+    if (noiseBuffer) return noiseBuffer;
+    const len = Math.floor(ctx.sampleRate * 2.2);
+    noiseBuffer = ctx.createBuffer(1, len, ctx.sampleRate);
+    const data = noiseBuffer.getChannelData(0);
+    for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
+    return noiseBuffer;
   }
 
-  async requestPermission() {
-    if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
-      try {
-        const res = await DeviceMotionEvent.requestPermission();
-        return res === 'granted';
-      } catch (e) {
-        return false;
+  // Approaching-ball swoosh. Volume + brightness both ramp up toward the
+  // arrival instant, panned hard to the correct ear. Returns a small
+  // controller so the game can end the sound cleanly (hit / miss / cancel).
+  function playApproach(direction, travelMs){
+    const now = ctx.currentTime;
+    const dur = Math.max(0.05, travelMs / 1000);
+    const pan = direction === "right" ? 0.92 : -0.92;
+
+    const src = ctx.createBufferSource();
+    src.buffer = getNoiseBuffer();
+    src.loop = true;
+
+    const filter = ctx.createBiquadFilter();
+    filter.type = "bandpass";
+    filter.Q.value = 0.8;
+    filter.frequency.setValueAtTime(280, now);
+    filter.frequency.exponentialRampToValueAtTime(4200, now + dur);
+
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0008, now);
+    gain.gain.exponentialRampToValueAtTime(0.85, now + dur);
+
+    const body = ctx.createOscillator();
+    body.type = "sine";
+    body.frequency.setValueAtTime(85, now);
+    body.frequency.exponentialRampToValueAtTime(170, now + dur);
+    const bodyGain = ctx.createGain();
+    bodyGain.gain.setValueAtTime(0.0008, now);
+    bodyGain.gain.exponentialRampToValueAtTime(0.32, now + dur);
+
+    const panner = ctx.createStereoPanner();
+    panner.pan.value = pan;
+
+    src.connect(filter); filter.connect(gain); gain.connect(panner);
+    body.connect(bodyGain); bodyGain.connect(panner);
+    panner.connect(master);
+
+    src.start(now);
+    body.start(now);
+
+    let stopped = false;
+    function hardStop(delayMs){
+      if (stopped) return;
+      stopped = true;
+      setTimeout(() => { try { src.stop(); } catch(e){} try { body.stop(); } catch(e){} }, delayMs);
+    }
+
+    return {
+      stopAtPeak(){
+        const t = ctx.currentTime;
+        gain.gain.cancelScheduledValues(t);
+        gain.gain.setValueAtTime(gain.gain.value, t);
+        gain.gain.linearRampToValueAtTime(0.0001, t + 0.05);
+        bodyGain.gain.cancelScheduledValues(t);
+        bodyGain.gain.setValueAtTime(bodyGain.gain.value, t);
+        bodyGain.gain.linearRampToValueAtTime(0.0001, t + 0.05);
+        hardStop(90);
+      },
+      passBy(){
+        const t = ctx.currentTime;
+        const finalPan = direction === "right" ? 1.0 : -1.0;
+        try { panner.pan.linearRampToValueAtTime(finalPan, t + 0.3); } catch(e){}
+        filter.frequency.exponentialRampToValueAtTime(140, t + 0.35);
+        gain.gain.linearRampToValueAtTime(0.0001, t + 0.4);
+        bodyGain.gain.linearRampToValueAtTime(0.0001, t + 0.4);
+        hardStop(450);
+      },
+      cancel(){
+        const t = ctx.currentTime;
+        gain.gain.cancelScheduledValues(t);
+        gain.gain.setValueAtTime(gain.gain.value, t);
+        gain.gain.linearRampToValueAtTime(0.0001, t + 0.04);
+        hardStop(70);
       }
-    }
-    return true;
+    };
   }
 
-  setCalibration(fh, bh) {
-    this.fhSign = fh;
-    this.bhSign = bh;
-    localStorage.setItem('aero_fh_sign', fh);
-    localStorage.setItem('aero_bh_sign', bh);
+  function playHit(side){
+    const now = ctx.currentTime;
+    const pan = side === "right" ? 0.6 : -0.6;
+
+    const src = ctx.createBufferSource();
+    src.buffer = getNoiseBuffer();
+    const filter = ctx.createBiquadFilter();
+    filter.type = "lowpass";
+    filter.frequency.setValueAtTime(2400, now);
+    filter.frequency.exponentialRampToValueAtTime(300, now + 0.12);
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.9, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.13);
+    const panner = ctx.createStereoPanner();
+    panner.pan.value = pan;
+    src.connect(filter); filter.connect(gain); gain.connect(panner); panner.connect(master);
+    src.start(now); src.stop(now + 0.16);
+
+    const blip = ctx.createOscillator();
+    blip.type = "triangle";
+    blip.frequency.setValueAtTime(560, now);
+    blip.frequency.exponentialRampToValueAtTime(180, now + 0.09);
+    const blipGain = ctx.createGain();
+    blipGain.gain.setValueAtTime(0.5, now);
+    blipGain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+    blip.connect(blipGain); blipGain.connect(panner);
+    blip.start(now); blip.stop(now + 0.11);
   }
 
-  start() {
-    this.active = true;
-    this.lockoutUntil = 0;
-    this.buffer = [];
-    this.gravZ = 0;
-    window.addEventListener('devicemotion', this.onMotion, false);
+  function playMiss(){
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    osc.type = "sawtooth";
+    osc.frequency.setValueAtTime(200, now);
+    osc.frequency.exponentialRampToValueAtTime(65, now + 0.4);
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.32, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+    osc.connect(gain); gain.connect(master);
+    osc.start(now); osc.stop(now + 0.46);
   }
 
-  stop() {
-    this.active = false;
-    window.removeEventListener('devicemotion', this.onMotion, false);
-  }
-
-  onMotion(e) {
-    if (!this.active) return;
-
-    let az = 0;
-    if (e.acceleration && e.acceleration.z !== null && !isNaN(e.acceleration.z)) {
-      az = e.acceleration.z;
-    } else if (e.accelerationIncludingGravity && e.accelerationIncludingGravity.z !== null) {
-      this.gravZ = this.alpha * this.gravZ + (1 - this.alpha) * e.accelerationIncludingGravity.z;
-      az = e.accelerationIncludingGravity.z - this.gravZ;
-    }
-
-    const now = performance.now();
-
-    // Maintain 10-frame FIFO buffer
-    this.buffer.push({ az, t: now });
-    if (this.buffer.length > 10) this.buffer.shift();
-
-    if (now < this.lockoutUntil) return;
-
-    // Detect swing impulse
-    if (Math.abs(az) >= this.SWING_THRESHOLD) {
-      // Find the initial impulse leading this strike to ignore follow-through braking
-      let firstLeadingSample = az;
-      for (let i = 0; i < this.buffer.length; i++) {
-        if (Math.abs(this.buffer[i].az) >= 2.5) {
-          firstLeadingSample = this.buffer[i].az;
-          break;
-        }
-      }
-
-      const impulseSign = firstLeadingSample > 0 ? 1 : -1;
-      let detectedFace = 'SCREEN';
-
-      if (impulseSign === this.fhSign) {
-        detectedFace = 'SCREEN';
-      } else if (impulseSign === this.bhSign) {
-        detectedFace = 'BACK_PANEL';
-      } else {
-        detectedFace = (az > 0) ? 'SCREEN' : 'BACK_PANEL';
-      }
-
-      this.lockoutUntil = now + 650; // Lock out sensor until follow-through finishes
-      this.onSwing(detectedFace, Math.abs(az));
-    }
-  }
-}
-
-/**
- * 3. AUTHORITATIVE TENNIS CONTROLLER
- * Gated Preparation Window + Multi-Tiered Sweet Spot.
- */
-class TennisMatchController {
-  constructor(audio, role, sendPacket, motionEngine) {
-    this.audio = audio;
-    this.role = role;
-    this.sendPacket = sendPacket;
-    this.motion = motionEngine;
-
-    this.points = [0, 0];
-    this.games = [0, 0];
-    this.server = 0;
-
-    this.state = 'IDLE'; // 'IDLE', 'AWAITING_SERVE', 'BALL_IN_PLAY'
-    this.expectedDirection = null; // -1: Left (Backhand), 1: Right (Forehand)
-    this.flightTime = 1.35;
-    this.ballStartTime = 0;
-    this.missTimeout = null;
-  }
-
-  getScoreStr() {
-    const p1 = this.points[0];
-    const p2 = this.points[1];
-
-    if (p1 >= 3 && p2 >= 3) {
-      if (p1 === p2) return "Deuce";
-      if (p1 === p2 + 1) return this.server === 0 ? "Advantage Server" : "Advantage Receiver";
-      if (p2 === p1 + 1) return this.server === 1 ? "Advantage Server" : "Advantage Receiver";
-    }
-
-    const terms = ["Love", "15", "30", "40"];
-    const serverScore = this.server === 0 ? terms[p1] : terms[p2];
-    const receiverScore = this.server === 0 ? terms[p2] : terms[p1];
-    return `${serverScore} - ${receiverScore}`;
-  }
-
-  updateHUD(mainText = "", telemetryText = "") {
-    document.getElementById('hudScore').innerText = this.getScoreStr();
-    const isMyServe = (this.role === 'GUEST') ? (this.server === 1) : (this.server === 0);
-    document.getElementById('hudServer').innerText = isMyServe ? "YOUR SERVE" : "RECEIVING";
-    if (mainText) document.getElementById('hudFeedbackMain').innerText = mainText;
-    if (telemetryText) document.getElementById('hudTelemetry').innerText = telemetryText;
-  }
-
-  speak(text, cb) {
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(text);
-      let done = false;
-      const wrap = () => { if (!done) { done = true; if (cb) cb(); } };
-      u.onend = wrap;
-      u.onerror = wrap;
-      setTimeout(wrap, 2000);
-      window.speechSynthesis.speak(u);
-    } else {
-      if (cb) setTimeout(cb, 1000);
-    }
-  }
-
-  start() {
-    this.updateHUD("MATCH COMMENCING");
-    this.speak("Match commenced. " + (this.server === 0 ? "You serve." : "Opponent serves."), () => {
-      this.initiatePoint();
+  function playServeReady(){
+    const now = ctx.currentTime;
+    [0, 0.12, 0.24].forEach((offset, i) => {
+      const osc = ctx.createOscillator();
+      osc.type = "sine";
+      osc.frequency.value = 440 + i * 110;
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.0001, now + offset);
+      g.gain.linearRampToValueAtTime(0.28, now + offset + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, now + offset + 0.1);
+      osc.connect(g); g.connect(master);
+      osc.start(now + offset); osc.stop(now + offset + 0.13);
     });
   }
 
-  initiatePoint() {
-    this.state = 'IDLE';
-    clearTimeout(this.missTimeout);
-    this.updateHUD("POINT SETUP", "");
-
-    setTimeout(() => {
-      const isMyServe = (this.role === 'GUEST') ? (this.server === 1) : (this.server === 0);
-
-      if (isMyServe) {
-        this.state = 'AWAITING_SERVE';
-        this.updateHUD("YOUR SERVE", "SWING FORWARD TO SERVE");
-      } else {
-        this.updateHUD("RECEIVING", "AWAITING OPPONENT SERVE");
-        if (this.role === 'WALL') {
-          setTimeout(() => {
-            const serveDir = Math.random() > 0.5 ? 1 : -1;
-            this.receiveBall(serveDir, 1.35);
-          }, 1200);
-        } else if (this.role === 'HOST') {
-          this.sendPacket({ type: 'CMD_SERVE' });
-        }
-      }
-    }, 1200);
+  function playChime(kind){
+    const now = ctx.currentTime;
+    const seqs = {
+      point: [523],
+      game: [523, 659, 784],
+      match: [523, 659, 784, 1046]
+    };
+    const notes = seqs[kind] || seqs.point;
+    notes.forEach((freq, i) => {
+      const t = now + i * 0.11;
+      const osc = ctx.createOscillator();
+      osc.type = "sine";
+      osc.frequency.value = freq;
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.linearRampToValueAtTime(0.3, t + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.3);
+      osc.connect(g); g.connect(master);
+      osc.start(t); osc.stop(t + 0.32);
+    });
   }
 
-  receiveBall(dir, dur) {
-    this.state = 'BALL_IN_PLAY';
-    clearTimeout(this.missTimeout);
-
-    this.expectedDirection = dir;
-    this.flightTime = dur;
-    this.ballStartTime = performance.now();
-
-    this.audio.playBallApproach(dir, dur);
-    this.updateHUD(
-      dir === 1 ? "FOREHAND (RIGHT) ▶" : "◀ BACKHAND (LEFT)",
-      dir === 1 ? "SCREEN FORWARD" : "BACK PANEL FORWARD"
-    );
-
-    // Timeout occurs only if the player fails to swing before the ball passes
-    this.missTimeout = setTimeout(() => {
-      if (this.state === 'BALL_IN_PLAY') {
-        this.handleMiss("TOO LATE - MISSED BALL");
-      }
-    }, (dur + 0.45) * 1000);
+  function playTestTone(pan){
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    osc.type = "sine";
+    osc.frequency.value = 440;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.4, now);
+    g.gain.setValueAtTime(0.4, now + 0.4);
+    g.gain.exponentialRampToValueAtTime(0.001, now + 0.46);
+    const p = ctx.createStereoPanner();
+    p.pan.value = pan;
+    osc.connect(g); g.connect(p); p.connect(master);
+    osc.start(now); osc.stop(now + 0.48);
   }
 
-  onSwing(face, forceVal) {
-    // 1. Serving Mode
-    if (this.state === 'AWAITING_SERVE') {
-      this.state = 'IDLE';
-      this.audio.playHit();
-      this.updateHUD("SERVE STRUCK!", `POWER: ${forceVal.toFixed(1)} [${face}]`);
+  function speak(text){
+    return new Promise((resolve) => {
+      if (!("speechSynthesis" in window)){ resolve(); return; }
+      try{
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(text);
+        u.rate = 1.05;
+        u.onend = resolve;
+        u.onerror = resolve;
+        window.speechSynthesis.speak(u);
+        // Safety net: some mobile browsers occasionally never fire onend.
+        setTimeout(resolve, Math.max(1200, text.length * 90));
+      }catch(e){ resolve(); }
+    });
+  }
 
-      if (this.role === 'WALL') {
-        setTimeout(() => this.audio.playBounce(), 450);
-        setTimeout(() => {
-          const nextDir = Math.random() > 0.5 ? 1 : -1;
-          this.receiveBall(nextDir, 1.30);
-        }, 900);
-      } else {
-        const nextDir = Math.random() > 0.5 ? 1 : -1;
-        this.sendPacket({ type: 'BALL', direction: nextDir, duration: 1.30 });
-      }
+  return { init, resume, isReady, playApproach, playHit, playMiss, playServeReady, playChime, playTestTone, speak };
+})();
+
+/* =========================================================================
+   MOTION ENGINE
+   Reads the accelerometer and figures out two things about a swing:
+     1. Did the player swing hard enough, right now, to count at all?
+     2. Which face of the phone was leading the motion — the screen
+        (local +z) or the back panel (local -z)?
+   The device's local z-axis points out of the screen. When the wrist
+   flips for a backhand, the *phone's own frame* flips with it, so the
+   sign of the local z-acceleration at the moment of the swing is, on its
+   own, the answer to "which face hit forward" — no separate orientation
+   tracking is needed.
+   ========================================================================= */
+const MotionEngine = (() => {
+  let listening = false;
+  let armed = false;
+  let onSwingCb = null;
+
+  // Which sign of local-z acceleration means "screen swung forward" is not
+  // consistent across devices/browsers (documented cross-platform quirk in
+  // DeviceMotionEvent implementations). Rather than assume one, we measure
+  // it once per session from a real calibration swing. +1 = raw sign is
+  // trustworthy as-is, -1 = it's inverted on this device/browser.
+  let calibSign = 1;
+  let calibrated = false;
+
+  let gravity = { x: 0, y: 0, z: 0 };
+  let haveGravity = false;
+
+  let buffer = [];
+  const BUFFER_MS = 300;
+
+  let state = "idle"; // 'idle' | 'rising'
+  let peakSample = null;
+  let lastSwingTime = 0;
+
+  function isSupported(){ return typeof window.DeviceMotionEvent !== "undefined"; }
+
+  async function requestPermission(){
+    if (typeof DeviceMotionEvent !== "undefined" && typeof DeviceMotionEvent.requestPermission === "function"){
+      try{
+        const res = await DeviceMotionEvent.requestPermission();
+        return res === "granted";
+      }catch(e){ return false; }
+    }
+    return true; // Android and browsers that don't gate motion behind a prompt
+  }
+
+  function handleMotion(e){
+    const t = performance.now();
+    let ax, ay, az;
+
+    if (e.acceleration && e.acceleration.x !== null && e.acceleration.x !== undefined){
+      ax = e.acceleration.x; ay = e.acceleration.y; az = e.acceleration.z;
+    } else if (e.accelerationIncludingGravity && e.accelerationIncludingGravity.x !== null){
+      const g = e.accelerationIncludingGravity;
+      if (!haveGravity){ gravity.x = g.x; gravity.y = g.y; gravity.z = g.z; haveGravity = true; }
+      const alpha = 0.85;
+      gravity.x = alpha * gravity.x + (1 - alpha) * g.x;
+      gravity.y = alpha * gravity.y + (1 - alpha) * g.y;
+      gravity.z = alpha * gravity.z + (1 - alpha) * g.z;
+      ax = g.x - gravity.x; ay = g.y - gravity.y; az = g.z - gravity.z;
+    } else {
       return;
     }
 
-    // 2. Rally Mode
-    if (this.state === 'BALL_IN_PLAY') {
-      const elapsed = (performance.now() - this.ballStartTime) / 1000;
+    const mag = Math.sqrt(ax*ax + ay*ay + az*az);
+    const sample = { t, ax, ay, az, mag };
+    buffer.push(sample);
+    while (buffer.length && t - buffer[0].t > BUFFER_MS) buffer.shift();
 
-      // IMMUNITY WINDOW (0.0s - 0.70s): Ignore arm setup and wrist-turning motion
-      if (elapsed < (this.flightTime - 0.65)) {
-        return; // Arm crossing chest safely ignored
+    if (!armed){ state = "idle"; peakSample = null; return; }
+    if (t - lastSwingTime < SWING_COOLDOWN_MS) return;
+
+    if (state === "idle"){
+      if (mag > SWING_MAGNITUDE_THRESHOLD){
+        state = "rising";
+        peakSample = sample;
       }
+    } else if (state === "rising"){
+      if (mag >= peakSample.mag){
+        peakSample = sample;
+      } else if (mag < peakSample.mag * SWING_FALL_RATIO){
+        finalizeSwing(peakSample, t);
+        state = "idle";
+        peakSample = null;
+      }
+    }
+  }
 
-      clearTimeout(this.missTimeout);
-      this.state = 'IDLE';
+  function finalizeSwing(peak, now){
+    lastSwingTime = now;
+    const nearby = buffer.filter(s => Math.abs(s.t - peak.t) <= 40);
+    const avgAz = nearby.reduce((sum, s) => sum + s.az, 0) / (nearby.length || 1);
+    let side;
+    if (Math.abs(avgAz) < SWING_Z_DEADZONE) side = "unclear";
+    else side = (avgAz * calibSign) > 0 ? "right" : "left"; // right = screen-forward, left = back-panel-forward
+    // rawAz is exposed (uncalibrated) so the calibration routine below can
+    // read the device's true sign convention directly, independent of
+    // whatever calibSign currently is.
+    if (onSwingCb) onSwingCb({ side, rawAz: avgAz, magnitude: peak.mag, time: now });
+  }
 
-      // Check Racket Face:
-      // Right Ear = Screen forward (FOREHAND)
-      // Left Ear = Back panel forward (BACKHAND)
-      const targetFace = (this.expectedDirection === 1) ? 'SCREEN' : 'BACK_PANEL';
-      if (face !== targetFace) {
-        this.audio.playWhiff();
-        const err = (this.expectedDirection === 1)
-          ? "WRONG FACE (NEED SCREEN)"
-          : "WRONG FACE (NEED BACK PANEL)";
-        this.handleMiss(err, `DETECTED: ${face}`);
+  function start(onSwing){
+    onSwingCb = onSwing;
+    if (!listening){
+      window.addEventListener("devicemotion", handleMotion, { passive: true });
+      listening = true;
+    }
+  }
+  function arm(){ armed = true; state = "idle"; peakSample = null; }
+  function disarm(){ armed = false; }
+
+  // Have the player do one known "screen-forward forehand" swing, and use
+  // it to fix calibSign for the rest of the session. Resolves
+  // { ok: true } on a captured swing, { ok: false } on timeout — caller
+  // decides whether to retry or fall back to the uncalibrated default.
+  function calibrateForehand(timeoutMs){
+    return new Promise((resolve) => {
+      let done = false;
+      const prevCb = onSwingCb;
+      const finish = (result) => {
+        if (done) return;
+        done = true;
+        clearTimeout(timer);
+        disarm();
+        onSwingCb = prevCb;
+        resolve(result);
+      };
+      const timer = setTimeout(() => finish({ ok: false }), timeoutMs || 6000);
+      onSwingCb = (swing) => {
+        if (swing.side === "unclear") return; // ambiguous jitter — keep waiting for a clean swing
+        calibSign = swing.rawAz > 0 ? 1 : -1;
+        calibrated = true;
+        finish({ ok: true });
+      };
+      arm();
+    });
+  }
+  function isCalibrated(){ return calibrated; }
+  function resetCalibration(){ calibSign = 1; calibrated = false; }
+
+  return { isSupported, requestPermission, start, arm, disarm, calibrateForehand, isCalibrated, resetCalibration };
+})();
+
+/* Fallback input for devices/browsers without usable motion sensors,
+   or for anyone who just prefers tap controls. Same interface as
+   MotionEngine so GameEngine never has to know which one it's using. */
+const ManualInputEngine = (() => {
+  let armed = false;
+  let onSwingCb = null;
+  function isSupported(){ return true; }
+  async function requestPermission(){ return true; }
+  function start(onSwing){ onSwingCb = onSwing; }
+  function arm(){ armed = true; }
+  function disarm(){ armed = false; }
+  function trigger(side){
+    if (!armed || !onSwingCb) return;
+    onSwingCb({ side, magnitude: 99, time: performance.now() });
+  }
+  return { isSupported, requestPermission, start, arm, disarm, trigger };
+})();
+
+/* =========================================================================
+   NETWORK ENGINE
+   Real peer-to-peer via WebRTC (STUN only — fine for the vast majority of
+   home/mobile networks). There's no dedicated signaling server here, so
+   the two phones "find" each other using this artifact's shared
+   persistent storage as a simple mailbox, keyed by the 6-digit room code.
+   Once the connection opens, all game data flows device-to-device.
+   ========================================================================= */
+const NetworkEngine = (() => {
+  const ICE_SERVERS = [
+    { urls: "stun:stun.l.google.com:19302" },
+    { urls: "stun:stun1.l.google.com:19302" }
+  ];
+
+  let pc = null;
+  let dc = null;
+  let roomCode = null;
+  let role = null; // 'host' | 'guest'
+  let pollTimer = null;
+  let seenIceKeys = new Set();
+
+  let onMessageCb = null;
+  let onConnectedCb = null;
+  let onDisconnectedCb = null;
+
+  function available(){ return hasStorage() && typeof RTCPeerConnection !== "undefined"; }
+
+  function key(suffix){ return `aerotennis:room:${roomCode}:${suffix}`; }
+  function makeRoomCode(){ return String(Math.floor(100000 + Math.random() * 900000)); }
+
+  async function storageSet(k, v){
+    try{ await window.storage.set(k, JSON.stringify(v), true); }catch(e){ /* best effort */ }
+  }
+  async function storageGet(k){
+    try{
+      const r = await window.storage.get(k, true);
+      return r ? JSON.parse(r.value) : null;
+    }catch(e){ return null; }
+  }
+  async function storageListKeys(prefix){
+    try{
+      const r = await window.storage.list(prefix, true);
+      return (r && r.keys) ? r.keys : [];
+    }catch(e){ return []; }
+  }
+
+  function setupPeerConnection(){
+    pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
+    pc.onicecandidate = (e) => {
+      if (e.candidate){
+        const idx = Date.now() + "_" + Math.random().toString(36).slice(2);
+        storageSet(key(`ice_${role}_${idx}`), e.candidate);
+      }
+    };
+    pc.onconnectionstatechange = () => {
+      if (pc.connectionState === "connected"){
+        if (pollTimer){ clearInterval(pollTimer); pollTimer = null; }
+        onConnectedCb && onConnectedCb();
+      } else if (["disconnected","failed","closed"].includes(pc.connectionState)){
+        onDisconnectedCb && onDisconnectedCb();
+      }
+    };
+  }
+
+  function setupDataChannel(channel){
+    dc = channel;
+    dc.onmessage = (e) => {
+      let data;
+      try{ data = JSON.parse(e.data); }catch(err){ return; }
+      onMessageCb && onMessageCb(data);
+    };
+  }
+
+  async function pollRemoteIce(remoteRole){
+    const prefix = key(`ice_${remoteRole}_`);
+    const keys = await storageListKeys(prefix);
+    for (const k of keys){
+      if (seenIceKeys.has(k)) continue;
+      seenIceKeys.add(k);
+      const cand = await storageGet(k);
+      if (cand){
+        try{ await pc.addIceCandidate(new RTCIceCandidate(cand)); }catch(e){}
+      }
+    }
+  }
+
+  async function createRoom(){
+    role = "host";
+    seenIceKeys = new Set();
+    // This artifact's shared storage is a namespace shared by everyone
+    // currently using it, not private to this one match — so before
+    // committing to a freshly-generated code, make sure nobody else has
+    // an active (or leftover) room under it.
+    let candidate, taken, attempts = 0;
+    do {
+      candidate = makeRoomCode();
+      taken = await storageGet(`aerotennis:room:${candidate}:offer`);
+      attempts++;
+    } while (taken && attempts < 8);
+    roomCode = candidate;
+    setupPeerConnection();
+    setupDataChannel(pc.createDataChannel("game"));
+
+    const offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+    await storageSet(key("offer"), offer);
+
+    pollTimer = setInterval(async () => {
+      if (pc.currentRemoteDescription){
+        pollRemoteIce("guest");
         return;
       }
-
-      // Timing Quality Rating
-      let timingLabel = "SWEET SPOT HIT!";
-      const delta = elapsed - this.flightTime;
-      if (delta < -0.22) timingLabel = "EARLY CROSS SHOT!";
-      else if (delta > 0.22) timingLabel = "LATE DEFENSIVE SHOT!";
-
-      // Clean Hit Confirmed
-      this.audio.playHit();
-      this.updateHUD(timingLabel, `FORCE: ${forceVal.toFixed(1)} m/s² [${face}]`);
-
-      if (this.role === 'WALL') {
-        setTimeout(() => this.audio.playBounce(), 450);
-        setTimeout(() => {
-          const nextDir = Math.random() > 0.5 ? 1 : -1;
-          this.receiveBall(nextDir, 1.25);
-        }, 900);
-      } else {
-        this.sendPacket({
-          type: 'BALL',
-          direction: Math.random() > 0.5 ? 1 : -1,
-          duration: 1.25
-        });
+      const answer = await storageGet(key("answer"));
+      if (answer){
+        try{ await pc.setRemoteDescription(new RTCSessionDescription(answer)); }catch(e){}
       }
+    }, 1000);
+
+    return roomCode;
+  }
+
+  function joinRoom(code){
+    role = "guest";
+    roomCode = code;
+    seenIceKeys = new Set();
+    setupPeerConnection();
+    pc.ondatachannel = (e) => setupDataChannel(e.channel);
+
+    return new Promise((resolve, reject) => {
+      let attempts = 0;
+      pollTimer = setInterval(async () => {
+        attempts++;
+        if (attempts > 40){
+          clearInterval(pollTimer); pollTimer = null;
+          reject(new Error("No match found with that code. Double-check it and try again."));
+          return;
+        }
+        if (!pc.currentRemoteDescription){
+          const offer = await storageGet(key("offer"));
+          if (offer){
+            try{
+              await pc.setRemoteDescription(new RTCSessionDescription(offer));
+              const answer = await pc.createAnswer();
+              await pc.setLocalDescription(answer);
+              await storageSet(key("answer"), answer);
+              resolve(true);
+            }catch(e){ /* try again next tick */ }
+          }
+        } else {
+          pollRemoteIce("host");
+        }
+      }, 1000);
+    });
+  }
+
+  function send(data){
+    if (dc && dc.readyState === "open"){
+      try{ dc.send(JSON.stringify(data)); }catch(e){}
+    }
+  }
+
+  function onMessage(cb){ onMessageCb = cb; }
+  function onConnected(cb){ onConnectedCb = cb; }
+  function onDisconnected(cb){ onDisconnectedCb = cb; }
+
+  async function cleanupRoomKeys(){
+    if (!roomCode) return;
+    try{
+      const keys = await storageListKeys(`aerotennis:room:${roomCode}:`);
+      await Promise.all(keys.map(k => window.storage.delete(k, true).catch(() => {})));
+    }catch(e){ /* best effort — a leftover key or two is harmless */ }
+  }
+
+  function teardown(){
+    if (pollTimer){ clearInterval(pollTimer); pollTimer = null; }
+    if (dc){ try{ dc.close(); }catch(e){} }
+    if (pc){ try{ pc.close(); }catch(e){} }
+    if (role === "host") cleanupRoomKeys();
+    pc = null; dc = null; roomCode = null; role = null;
+    seenIceKeys = new Set();
+  }
+
+  return { available, createRoom, joinRoom, send, onMessage, onConnected, onDisconnected, teardown };
+})();
+
+/* =========================================================================
+   GAME ENGINE
+   Host is authoritative for score/state. Whichever device is currently
+   receiving a shot enforces its own timing/side check locally (no clock
+   sync needed), then reports the outcome. Wall mode reuses the exact
+   same receive/react code path against a "wall" that always returns.
+   ========================================================================= */
+const GameEngine = (() => {
+  let mode = null;        // 'multiplayer' | 'wall'
+  let isHost = false;
+  let InputEngine = null;
+  let ui = null;
+
+  let pointsHost = 0, pointsGuest = 0, gamesHost = 0, gamesGuest = 0;
+  let serverIsHost = false;
+  let faultCount = 0;
+  let rallySpeedup = 0;
+  let shotSeq = 0;
+  let wallStreak = 0;
+  let activeShot = null;
+
+  function init({ mode: m, isHost: h, inputEngine, uiCallbacks }){
+    mode = m; isHost = h; InputEngine = inputEngine; ui = uiCallbacks;
+    if (mode === "multiplayer"){
+      NetworkEngine.onMessage(handleNetMessage);
+      NetworkEngine.onDisconnected(() => ui.onOpponentLeft && ui.onOpponentLeft());
+      NetworkEngine.onConnected(() => {
+        ui.onConnected && ui.onConnected();
+        if (isHost) startMultiplayerMatch();
+      });
+    }
+  }
+
+  function currentStateSnapshot(){
+    return { pointsHost, pointsGuest, gamesHost, gamesGuest, serverIsHost };
+  }
+
+  function applyStateFromMessage(state){
+    pointsHost = state.pointsHost; pointsGuest = state.pointsGuest;
+    gamesHost = state.gamesHost; gamesGuest = state.gamesGuest;
+    serverIsHost = state.serverIsHost;
+    const myPoints = isHost ? pointsHost : pointsGuest;
+    const oppPoints = isHost ? pointsGuest : pointsHost;
+    const myGames = isHost ? gamesHost : gamesGuest;
+    const oppGames = isHost ? gamesGuest : gamesHost;
+    const iAmServer = (serverIsHost === isHost);
+    ui.onState({ myPoints, oppPoints, myGames, oppGames, iAmServer, pointState: getPointState(myPoints, oppPoints) });
+  }
+
+  function buildAnnounceText(){
+    const ps = getPointState(pointsHost, pointsGuest);
+    let scoreText;
+    if (ps.type === "deuce") scoreText = "Deuce.";
+    else if (ps.type === "advantage") scoreText = `Advantage ${ps.aLeads ? "Player 1" : "Player 2"}.`;
+    else scoreText = ps.aLabel === ps.bLabel ? `${ps.aLabel} all.` : `${ps.aLabel} - ${ps.bLabel}.`;
+    const serverName = serverIsHost ? "Player 1" : "Player 2";
+    return `${scoreText} ${serverName} to serve.`;
+  }
+
+  function startMultiplayerMatch(){
+    pointsHost = 0; pointsGuest = 0; gamesHost = 0; gamesGuest = 0;
+    serverIsHost = Math.random() < 0.5;
+    NetworkEngine.send({ type: "MATCH_START", serverIsHost });
+    broadcastAnnounceAndStartPoint();
+  }
+
+  function startWallMode(){
+    wallStreak = 0;
+    ui.onWallStreak && ui.onWallStreak(0);
+    launchNewShot();
+  }
+
+  function broadcastAnnounceAndStartPoint(){
+    faultCount = 0;
+    rallySpeedup = 0;
+    const text = buildAnnounceText();
+    const state = currentStateSnapshot();
+    NetworkEngine.send({ type: "ANNOUNCE", text, state });
+    applyStateFromMessage(state);
+    ui.onAnnounce(text);
+    AudioEngine.speak(text).then(() => maybeStartServeIfIAmServer());
+  }
+
+  function maybeStartServeIfIAmServer(){
+    if (serverIsHost === isHost) startServeWindow();
+  }
+
+  function startServeWindow(){
+    AudioEngine.playServeReady();
+    ui.onServeReady && ui.onServeReady();
+    const seq = ++shotSeq;
+    activeShot = { seq, role: "server-wait-swing", resolved: false };
+    InputEngine.start((swing) => onLocalSwing(swing, seq));
+    InputEngine.arm();
+    activeShot.timeoutId = setTimeout(() => {
+      if (activeShot && activeShot.seq === seq && !activeShot.resolved){
+        activeShot.resolved = true;
+        InputEngine.disarm();
+        handleServeTimeout();
+      }
+    }, SHOT.SERVE_WINDOW_MS);
+  }
+
+  function handleServeTimeout(){
+    faultCount++;
+    if (faultCount >= 2){
+      reportPointResult(!isHost, "double-fault");
+    } else {
+      ui.onFault && ui.onFault();
+      AudioEngine.speak("Fault. Second serve.").then(() => startServeWindow());
+    }
+  }
+
+  function launchNewShot(){
+    const direction = Math.random() < 0.5 ? "left" : "right";
+    rallySpeedup = Math.min(rallySpeedup + SHOT.RALLY_SPEEDUP_STEP_MS, SHOT.MAX_TRAVEL_MS - SHOT.MIN_TRAVEL_MS);
+    let travelMs = randRange(SHOT.MIN_TRAVEL_MS, SHOT.MAX_TRAVEL_MS) - rallySpeedup;
+    travelMs = Math.max(travelMs, SHOT.MIN_TRAVEL_MS);
+    activeShot = null;
+    if (mode === "multiplayer"){
+      NetworkEngine.send({ type: "SHOT", direction, travelMs });
+    } else {
+      onReceiveShot({ direction, travelMs });
+    }
+  }
+
+  function onReceiveShot({ direction, travelMs }){
+    const seq = ++shotSeq;
+    const startTime = performance.now();
+    const audioHandle = AudioEngine.playApproach(direction, travelMs);
+    activeShot = { seq, role: "receiver-wait-swing", direction, travelMs, startTime, audioHandle, resolved: false };
+    ui.onShotStart && ui.onShotStart({ direction, travelMs });
+    InputEngine.start((swing) => onLocalSwing(swing, seq));
+    InputEngine.arm();
+    activeShot.timeoutId = setTimeout(() => {
+      if (activeShot && activeShot.seq === seq && !activeShot.resolved){
+        activeShot.resolved = true;
+        InputEngine.disarm();
+        audioHandle.passBy();
+        AudioEngine.playMiss();
+        ui.onShotResult && ui.onShotResult({ outcome: "miss", reason: "late" });
+        concludeRallyMiss();
+      }
+    }, travelMs + SHOT.SWEET_SPOT_MS + 60); // small buffer so a legitimate late-window swing never loses a race against this timer
+  }
+
+  function onLocalSwing(swing, seq){
+    if (!activeShot || activeShot.seq !== seq || activeShot.resolved) return;
+    if (activeShot.role === "server-wait-swing"){
+      if (swing.side === "unclear") return; // ignore ambiguous jitter, keep waiting in this same window
+      activeShot.resolved = true;
+      clearTimeout(activeShot.timeoutId);
+      InputEngine.disarm();
+      AudioEngine.playHit(swing.side);
+      ui.onShotResult && ui.onShotResult({ outcome: "hit" });
+      launchNewShot();
+    } else if (activeShot.role === "receiver-wait-swing"){
+      handleReceiverSwing(swing, activeShot);
+    }
+  }
+
+  function handleReceiverSwing(swing, shot){
+    const elapsed = performance.now() - shot.startTime;
+    const diff = elapsed - shot.travelMs;
+    clearTimeout(shot.timeoutId);
+
+    if (Math.abs(diff) > SHOT.SWEET_SPOT_MS){
+      finishReceiverMiss(shot, diff < 0 ? "early" : "late");
       return;
     }
-
-    this.audio.playWhiff();
+    if (swing.side === "unclear"){
+      finishReceiverMiss(shot, "unclear");
+      return;
+    }
+    if (swing.side !== shot.direction){
+      finishReceiverMiss(shot, "wrong-side");
+      return;
+    }
+    shot.resolved = true;
+    InputEngine.disarm();
+    shot.audioHandle.stopAtPeak();
+    AudioEngine.playHit(swing.side);
+    ui.onShotResult && ui.onShotResult({ outcome: "hit" });
+    if (mode === "wall"){ wallStreak++; ui.onWallStreak && ui.onWallStreak(wallStreak); }
+    launchNewShot();
   }
 
-  handleMiss(reason, telemetry = "") {
-    this.state = 'IDLE';
-    clearTimeout(this.missTimeout);
-
-    this.audio.playBounce();
-    this.updateHUD(reason, telemetry);
-
-    if (this.role === 'WALL') {
-      this.awardPoint(1);
-    } else if (this.role === 'HOST') {
-      this.awardPoint(1);
-    } else if (this.role === 'GUEST') {
-      this.sendPacket({ type: 'GUEST_MISS', reason });
-    }
+  function finishReceiverMiss(shot, reason){
+    shot.resolved = true;
+    InputEngine.disarm();
+    shot.audioHandle.passBy();
+    AudioEngine.playMiss();
+    ui.onShotResult && ui.onShotResult({ outcome: "miss", reason });
+    concludeRallyMiss();
   }
 
-  awardPoint(winner) {
-    this.points[winner]++;
-    const p1 = this.points[0];
-    const p2 = this.points[1];
-
-    let gameWon = false;
-    if (p1 >= 4 && p1 >= p2 + 2) {
-      this.games[0]++;
-      gameWon = true;
-    } else if (p2 >= 4 && p2 >= p1 + 2) {
-      this.games[1]++;
-      gameWon = true;
+  function concludeRallyMiss(){
+    if (mode === "wall"){
+      wallStreak = 0;
+      ui.onWallStreak && ui.onWallStreak(0);
+      setTimeout(() => launchNewShot(), 1200);
+      return;
     }
-
-    if (this.role === 'HOST') {
-      this.sendPacket({
-        type: 'SYNC',
-        points: this.points,
-        games: this.games,
-        server: this.server,
-        gameWon
-      });
-    }
-
-    if (gameWon) {
-      this.points = [0, 0];
-      this.server = this.server === 0 ? 1 : 0;
-      const str = `Game won. Standings: ${this.games[0]} games to ${this.games[1]}.`;
-      this.updateHUD(str);
-      this.speak(str, () => this.initiatePoint());
-    } else {
-      const s = this.getScoreStr();
-      this.updateHUD(s);
-      this.speak(s, () => this.initiatePoint());
-    }
-  }
-}
-
-/**
- * 4. CALIBRATION WIZARD & APPLICATION BOOTSTRAP
- */
-const audio = new AudioEngine();
-let match = null;
-let peer = null;
-let conn = null;
-
-const motion = new MoveKinematicEngine((face, force) => {
-  if (match) match.onSwing(face, force);
-});
-
-function refreshCalibBadges() {
-  const fh = motion.fhSign === 1 ? "+Z (NORMAL)" : "-Z (INVERTED)";
-  const bh = motion.bhSign === 1 ? "+Z (INVERTED)" : "-Z (NORMAL)";
-  document.getElementById('fhBadge').innerText = `FOREHAND: ${fh}`;
-  document.getElementById('bhBadge').innerText = `BACKHAND: ${bh}`;
-  document.getElementById('fhBadge').className = "calib-badge ready";
-  document.getElementById('bhBadge').className = "calib-badge ready";
-  document.getElementById('calibLabel').innerText = "CALIBRATED";
-  document.getElementById('calibLabel').style.color = "var(--green)";
-}
-refreshCalibBadges();
-
-// 5-Second Hardware Calibrator Wizard
-let wizardStep = 0;
-let tempFh = 1;
-let tempBh = -1;
-
-document.getElementById('btnRunWizard').addEventListener('click', async () => {
-  const ok = await motion.requestPermission();
-  if (!ok) {
-    alert("Motion sensor access required.");
-    return;
+    reportPointResult(!isHost, "miss");
   }
 
-  wizardStep = 1;
-  document.getElementById('calibModal').style.display = 'flex';
-  document.getElementById('modalStepTitle').innerText = "STEP 1 OF 2: FOREHAND";
-  document.getElementById('modalStepDesc').innerHTML = 
-    "Hold phone in right hand.<br/><b>Swing forward firmly with the SCREEN facing forward.</b>";
-  document.getElementById('modalPwrMeter').innerText = "SWING!";
+  function reportPointResult(winnerIsHost, reason){
+    if (isHost) applyPointResult(winnerIsHost, reason);
+    else NetworkEngine.send({ type: "POINT_RESULT", winnerIsHost, reason });
+  }
 
-  const wizardListener = (e) => {
-    let az = 0;
-    if (e.acceleration && e.acceleration.z !== null && !isNaN(e.acceleration.z)) {
-      az = e.acceleration.z;
-    } else if (e.accelerationIncludingGravity && e.accelerationIncludingGravity.z !== null) {
-      az = e.accelerationIncludingGravity.z;
-    }
+  function applyPointResult(winnerIsHost /*, reason */){
+    if (winnerIsHost) pointsHost++; else pointsGuest++;
+    ui.onChime && ui.onChime("point");
 
-    if (Math.abs(az) >= 4.0) {
-      if (wizardStep === 1) {
-        tempFh = az > 0 ? 1 : -1;
-        wizardStep = 2;
-        document.getElementById('modalStepTitle').innerText = "STEP 2 OF 2: BACKHAND";
-        document.getElementById('modalStepDesc').innerHTML = 
-          "Cross your arm across your chest.<br/><b>Swing forward with the BACK PANEL facing forward.</b>";
-        document.getElementById('modalPwrMeter').innerText = "SWING!";
-      } else if (wizardStep === 2) {
-        tempBh = az > 0 ? 1 : -1;
-        window.removeEventListener('devicemotion', wizardListener, false);
-        motion.setCalibration(tempFh, tempBh);
-        document.getElementById('calibModal').style.display = 'none';
-        refreshCalibBadges();
-        alert("Calibration successful! Your phone's exact hardware signs have been saved.");
+    if (hasWonBy2(pointsHost, pointsGuest, 4)){
+      if (pointsHost > pointsGuest) gamesHost++; else gamesGuest++;
+      pointsHost = 0; pointsGuest = 0;
+      serverIsHost = !serverIsHost;
+      ui.onChime && ui.onChime("game");
+
+      if (hasWonBy2(gamesHost, gamesGuest, 6)){
+        const payload = { type: "MATCH_END", winnerIsHost: gamesHost > gamesGuest, gamesHost, gamesGuest };
+        NetworkEngine.send(payload);
+        ui.onChime && ui.onChime("match");
+        ui.onMatchEnd && ui.onMatchEnd(payload);
+        return;
       }
     }
-  };
-
-  setTimeout(() => {
-    window.addEventListener('devicemotion', wizardListener, false);
-  }, 350);
-});
-
-// Audio Stereo Verification
-document.getElementById('btnAudioTest').addEventListener('click', () => {
-  const btn = document.getElementById('btnAudioTest');
-  btn.innerText = "Playing in LEFT ear...";
-  audio.playTestTone(-1, 400, () => {
-    btn.innerText = "Playing in RIGHT ear...";
-    audio.playTestTone(1, 800, () => {
-      btn.innerText = "Verified! (Tap to replay)";
-    });
-  });
-});
-
-function launchGame(title) {
-  document.getElementById('lobby').style.display = 'none';
-  document.getElementById('hud').style.display = 'flex';
-  document.getElementById('hudMode').innerText = title;
-
-  audio.init();
-  motion.start();
-
-  if ('wakeLock' in navigator) {
-    navigator.wakeLock.request('screen').catch(() => {});
+    broadcastAnnounceAndStartPoint();
   }
-}
 
-// 1. Solo Wall Practice
-document.getElementById('btnWall').addEventListener('click', async () => {
-  const ok = await motion.requestPermission();
-  if (!ok) return;
-  launchGame("SOLO WALL PRACTICE");
-  match = new TennisMatchController(audio, 'WALL', null, motion);
-  match.start();
-});
+  function handleNetMessage(msg){
+    switch (msg.type){
+      case "MATCH_START":
+        pointsHost = 0; pointsGuest = 0; gamesHost = 0; gamesGuest = 0;
+        serverIsHost = msg.serverIsHost;
+        break;
+      case "ANNOUNCE":
+        applyStateFromMessage(msg.state);
+        ui.onAnnounce(msg.text);
+        AudioEngine.speak(msg.text).then(() => maybeStartServeIfIAmServer());
+        break;
+      case "SHOT":
+        onReceiveShot(msg);
+        break;
+      case "POINT_RESULT":
+        if (isHost) applyPointResult(msg.winnerIsHost, msg.reason);
+        break;
+      case "MATCH_END":
+        ui.onMatchEnd && ui.onMatchEnd(msg);
+        break;
+      case "REMATCH_REQUEST":
+        if (isHost) startMultiplayerMatch();
+        break;
+      case "QUIT":
+        ui.onOpponentLeft && ui.onOpponentLeft();
+        break;
+    }
+  }
 
-// 2. Create Multiplayer Match (Host)
-document.getElementById('btnCreate').addEventListener('click', async () => {
-  const ok = await motion.requestPermission();
-  if (!ok) return;
+  function requestRematch(){
+    if (mode === "wall"){ startWallMode(); return; }
+    if (isHost) startMultiplayerMatch();
+    else NetworkEngine.send({ type: "REMATCH_REQUEST" });
+  }
 
-  const code = Math.random().toString(36).substring(2, 8).toUpperCase();
-  document.getElementById('statusText').innerHTML = 
-    `ROOM: <b style="color:var(--green); font-size:1.2rem;">${code}</b><br/>Waiting for Player 2...`;
+  function quit(){
+    if (activeShot && activeShot.timeoutId) clearTimeout(activeShot.timeoutId);
+    activeShot = null;
+    InputEngine && InputEngine.disarm();
+    if (mode === "multiplayer") NetworkEngine.send({ type: "QUIT" });
+  }
 
-  peer = new Peer('aerotennis-' + code);
-  peer.on('connection', (c) => {
-    conn = c;
-    const onOpen = () => {
-      launchGame("1v1 CYBER ARENA (HOST)");
-      match = new TennisMatchController(audio, 'HOST', (pkt) => conn.send(pkt), motion);
+  return { init, startMultiplayerMatch, startWallMode, requestRematch, quit };
+})();
 
-      conn.on('data', (d) => {
-        if (d.type === 'BALL') match.receiveBall(d.direction, d.duration);
-        else if (d.type === 'GUEST_MISS') match.awardPoint(0);
-      });
-
-      match.start();
-    };
-
-    if (conn.open) onOpen();
-    else conn.on('open', onOpen);
+/* =========================================================================
+   WAKE LOCK
+   ========================================================================= */
+const WakeLockManager = (() => {
+  let sentinel = null;
+  async function request(){
+    if (!("wakeLock" in navigator)) return;
+    try{ sentinel = await navigator.wakeLock.request("screen"); }catch(e){ /* e.g. blocked by low-power mode */ }
+  }
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") request();
   });
+  return { request };
+})();
 
-  peer.on('error', (e) => alert("P2P Signaling Error: " + e.type));
+/* =========================================================================
+   UI WIRING
+   ========================================================================= */
+const $ = (id) => document.getElementById(id);
+let ActiveInputEngine = MotionEngine;
+let currentIsHost = null;
+
+function showScreen(id){
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  $(id).classList.add("active");
+}
+document.querySelectorAll("[data-target]").forEach(btn => {
+  btn.addEventListener("click", () => showScreen(btn.dataset.target));
 });
 
-// 3. Join Match (Guest)
-document.getElementById('btnJoin').addEventListener('click', async () => {
-  const code = document.getElementById('roomInput').value.trim().toUpperCase();
-  if (code.length < 4) {
-    alert("Enter valid room code.");
+/* ---- boot sequence ---- */
+function renderChecklist(){
+  const items = [
+    { id: "motion", label: "Motion sensors", ok: MotionEngine.isSupported() || $("chk-manual").checked },
+    { id: "audio", label: "Audio engine", ok: true },
+    { id: "wake", label: "Screen stays awake", ok: ("wakeLock" in navigator) },
+    { id: "storage", label: "Online multiplayer", ok: NetworkEngine.available() }
+  ];
+  const el = $("boot-checklist");
+  el.innerHTML = "";
+  items.forEach(it => {
+    const div = document.createElement("div");
+    div.className = "check-item " + (it.ok ? "ok" : "bad");
+    div.innerHTML = `<span class="check-dot"></span><span>${it.label}${it.ok ? "" : " — unavailable here"}</span>`;
+    el.appendChild(div);
+  });
+}
+renderChecklist();
+$("chk-manual").addEventListener("change", renderChecklist);
+
+$("btn-start").addEventListener("click", async () => {
+  // Must happen synchronously-ish on the tap for iOS/Android audio autoplay rules.
+  AudioEngine.init();
+  AudioEngine.resume();
+
+  const useManual = $("chk-manual").checked;
+  ActiveInputEngine = useManual ? ManualInputEngine : MotionEngine;
+
+  if (!useManual && !MotionEngine.isSupported()){
+    $("boot-error").hidden = false;
+    $("boot-error").textContent = "This browser doesn't expose motion sensors. Check \u201cuse tap buttons instead\u201d above to continue.";
     return;
   }
-  const ok = await motion.requestPermission();
-  if (!ok) return;
+  $("boot-error").hidden = true;
 
-  document.getElementById('statusText').innerText = "Connecting...";
-  peer = new Peer();
-  peer.on('open', () => {
-    conn = peer.connect('aerotennis-' + code, { reliable: true });
-    const onOpen = () => {
-      launchGame("1v1 CYBER ARENA (GUEST)");
-      match = new TennisMatchController(audio, 'GUEST', (pkt) => conn.send(pkt), motion);
+  if (!useManual){
+    const granted = await MotionEngine.requestPermission();
+    if (!granted){
+      $("boot-error").hidden = false;
+      $("boot-error").textContent = "Motion access was denied. Enable it for this page in your browser's site settings, then reload.";
+      return;
+    }
+    MotionEngine.start(() => {}); // warm up the gravity filter early
+  }
 
-      conn.on('data', (d) => {
-        if (d.type === 'BALL') match.receiveBall(d.direction, d.duration);
-        else if (d.type === 'CMD_SERVE') {
-          match.server = 1;
-          match.initiatePoint();
-        } else if (d.type === 'SYNC') {
-          match.points = d.points;
-          match.games = d.games;
-          match.server = d.server;
-          match.updateHUD();
-        }
-      });
-    };
-
-    if (conn.open) onOpen();
-    else conn.on('open', onOpen);
-  });
-
-  peer.on('error', () => alert("Could not find room code."));
+  WakeLockManager.request();
+  $("menu-net-note").hidden = NetworkEngine.available();
+  showScreen("screen-headphones");
 });
 
-document.getElementById('btnQuit').addEventListener('click', () => window.location.reload());
+/* ---- headphone check ---- */
+$("btn-test-left").addEventListener("click", () => AudioEngine.playTestTone(-1));
+$("btn-test-right").addEventListener("click", () => AudioEngine.playTestTone(1));
+$("btn-headphones-yes").addEventListener("click", proceedFromHeadphones);
+$("btn-headphones-no").addEventListener("click", () => { $("headphone-tips").hidden = false; });
+$("btn-headphones-anyway").addEventListener("click", proceedFromHeadphones);
+
+/* ---- calibration ---- */
+function proceedFromHeadphones(){
+  if (ActiveInputEngine !== MotionEngine){
+    showScreen("screen-menu");
+    return;
+  }
+  showScreen("screen-calibrate");
+  runCalibration();
+}
+async function runCalibration(){
+  $("calib-status").textContent = "Waiting for your swing…";
+  $("calib-status").className = "muted";
+  $("btn-calib-retry").hidden = true;
+  const result = await MotionEngine.calibrateForehand(6000);
+  if (result.ok){
+    $("calib-status").textContent = "Got it — calibrated.";
+    $("calib-status").className = "muted";
+    setTimeout(() => showScreen("screen-menu"), 600);
+  } else {
+    $("calib-status").textContent = "Didn't catch a clear swing. You can try again, or skip and use the default.";
+    $("calib-status").className = "error-text";
+    $("btn-calib-retry").hidden = false;
+  }
+}
+$("btn-calib-retry").addEventListener("click", runCalibration);
+$("btn-calib-skip").addEventListener("click", () => { MotionEngine.disarm(); showScreen("screen-menu"); });
+
+/* ---- settings ---- */
+$("sensitivity-select").addEventListener("change", (e) => {
+  SWING_MAGNITUDE_THRESHOLD = SWING_PRESETS[e.target.value] || SWING_PRESETS.medium;
+});
+$("btn-settings").addEventListener("click", () => showScreen("screen-settings"));
+$("btn-recalibrate").addEventListener("click", () => {
+  if (ActiveInputEngine !== MotionEngine){ showScreen("screen-menu"); return; }
+  showScreen("screen-calibrate");
+  runCalibration();
+});
+
+/* ---- menu ---- */
+$("btn-wall").addEventListener("click", () => {
+  currentIsHost = null;
+  GameEngine.init({ mode: "wall", isHost: false, inputEngine: ActiveInputEngine, uiCallbacks: uiCallbacks });
+  $("wall-streak").hidden = false;
+  $("manual-controls").hidden = (ActiveInputEngine !== ManualInputEngine);
+  $("serve-indicator").textContent = "Practice · Wall mode";
+  $("game-hud").style.visibility = "hidden";
+  showScreen("screen-game");
+  GameEngine.startWallMode();
+});
+
+$("btn-create").addEventListener("click", async () => {
+  if (!NetworkEngine.available()){
+    alert("Online multiplayer needs this page running with its storage feature available. Try Wall mode instead, or host this file where that feature is enabled.");
+    return;
+  }
+  currentIsHost = true;
+  $("lobby-label").textContent = "Share this code with your opponent";
+  $("lobby-status").textContent = "Waiting for opponent…";
+  $("btn-lobby-cancel").onclick = cancelLobby;
+  showScreen("screen-lobby");
+  GameEngine.init({ mode: "multiplayer", isHost: true, inputEngine: ActiveInputEngine, uiCallbacks: uiCallbacks });
+  const code = await NetworkEngine.createRoom();
+  $("lobby-code").textContent = formatCode(code);
+});
+
+$("btn-join").addEventListener("click", () => {
+  if (!NetworkEngine.available()){
+    alert("Online multiplayer needs this page running with its storage feature available. Try Wall mode instead.");
+    return;
+  }
+  $("input-room-code").value = "";
+  $("join-error").hidden = true;
+  showScreen("screen-join");
+});
+
+$("input-room-code").addEventListener("input", (e) => {
+  e.target.value = e.target.value.replace(/\D/g, "").slice(0, 6);
+});
+
+$("btn-join-confirm").addEventListener("click", async () => {
+  const code = $("input-room-code").value.trim();
+  if (!/^\d{6}$/.test(code)){
+    $("join-error").hidden = false;
+    $("join-error").textContent = "Enter the 6-digit code your opponent shared.";
+    return;
+  }
+  currentIsHost = false;
+  $("lobby-label").textContent = "Joining room";
+  $("lobby-code").textContent = formatCode(code);
+  $("lobby-status").textContent = "Connecting…";
+  $("btn-lobby-cancel").onclick = cancelLobby;
+  showScreen("screen-lobby");
+  GameEngine.init({ mode: "multiplayer", isHost: false, inputEngine: ActiveInputEngine, uiCallbacks: uiCallbacks });
+  try{
+    await NetworkEngine.joinRoom(code);
+  }catch(e){
+    NetworkEngine.teardown();
+    showScreen("screen-join");
+    $("join-error").hidden = false;
+    $("join-error").textContent = e.message || "Could not find that match.";
+  }
+});
+
+function cancelLobby(){
+  NetworkEngine.teardown();
+  showScreen("screen-menu");
+}
+
+/* ---- in-game UI ---- */
+let sonarRAF = null;
+function startSonarAnimation(travelMs){
+  const start = performance.now();
+  const ring = $("sonar-ring");
+  function frame(now){
+    const p = clamp((now - start) / travelMs, 0, 1);
+    ring.style.setProperty("--progress", p.toFixed(3));
+    if (p < 1) sonarRAF = requestAnimationFrame(frame);
+  }
+  sonarRAF = requestAnimationFrame(frame);
+}
+function stopSonarAnimation(){
+  if (sonarRAF) cancelAnimationFrame(sonarRAF);
+  sonarRAF = null;
+  $("sonar-ring").style.setProperty("--progress", "0");
+}
+function highlightSide(direction){
+  $("side-glow-left").classList.toggle("active", direction === "left");
+  $("side-glow-right").classList.toggle("active", direction === "right");
+}
+function flashResult(kind){
+  const stage = $("sonar-stage");
+  stage.classList.remove("flash-hit", "flash-miss");
+  void stage.offsetWidth; // restart animation/class application
+  stage.classList.add(kind === "hit" ? "flash-hit" : "flash-miss");
+  setTimeout(() => stage.classList.remove("flash-hit", "flash-miss"), 400);
+}
+
+function renderScore(pointState, myGames, oppGames, iAmServer){
+  let myLabel, oppLabel;
+  const banner = $("deuce-banner");
+  if (pointState.type === "deuce"){
+    myLabel = "40"; oppLabel = "40";
+    banner.textContent = "Deuce";
+  } else if (pointState.type === "advantage"){
+    myLabel = pointState.aLeads ? "Ad" : "40";
+    oppLabel = pointState.aLeads ? "40" : "Ad";
+    banner.textContent = pointState.aLeads ? "Advantage — You" : "Advantage — Opponent";
+  } else {
+    myLabel = pointState.aLabel; oppLabel = pointState.bLabel;
+    banner.textContent = "";
+  }
+  $("score-you").textContent = myLabel;
+  $("score-opp").textContent = oppLabel;
+  $("game-score-mid").textContent = `Games ${myGames}\u2013${oppGames}`;
+  $("serve-indicator").textContent = iAmServer ? "Your serve" : "Opponent serving";
+}
+
+const uiCallbacks = {
+  onConnected(){
+    $("game-hud").style.visibility = "visible";
+    $("wall-streak").hidden = true;
+    $("manual-controls").hidden = (ActiveInputEngine !== ManualInputEngine);
+    showScreen("screen-game");
+  },
+  onState({ myPoints, oppPoints, myGames, oppGames, iAmServer, pointState }){
+    renderScore(pointState, myGames, oppGames, iAmServer);
+  },
+  onAnnounce(text){
+    $("game-status-text").textContent = text;
+  },
+  onServeReady(){
+    $("game-status-text").textContent = "Your serve — swing when ready.";
+  },
+  onFault(){
+    $("game-status-text").textContent = "Fault — second serve.";
+  },
+  onShotStart({ direction, travelMs }){
+    highlightSide(direction);
+    startSonarAnimation(travelMs);
+  },
+  onShotResult({ outcome, reason }){
+    stopSonarAnimation();
+    highlightSide(null);
+    flashResult(outcome);
+    const messages = {
+      "hit": "Nice shot!",
+      "wrong-side": "Miss — wrong side of the phone.",
+      "early": "Miss — swung too early.",
+      "late": "Miss — too late.",
+      "unclear": "Miss — swing wasn't clear enough.",
+      "wall": "Streak ended."
+    };
+    $("game-status-text").textContent = outcome === "hit" ? messages.hit : (messages[reason] || "Miss.");
+  },
+  onChime(kind){ AudioEngine.playChime(kind); },
+  onWallStreak(n){
+    $("wall-streak").textContent = "Streak: " + n;
+  },
+  onMatchEnd(payload){
+    stopSonarAnimation();
+    const iWon = (payload.winnerIsHost === currentIsHost);
+    $("postgame-title").textContent = iWon ? "You win the match!" : "Opponent wins the match.";
+    $("postgame-detail").textContent = `Games: ${currentIsHost ? payload.gamesHost : payload.gamesGuest} \u2013 ${currentIsHost ? payload.gamesGuest : payload.gamesHost}`;
+    showScreen("screen-postgame");
+  },
+  onOpponentLeft(){
+    stopSonarAnimation();
+    $("postgame-title").textContent = "Opponent left the match";
+    $("postgame-detail").textContent = "You can start a new match from the main menu.";
+    showScreen("screen-postgame");
+  }
+};
+
+$("btn-manual-left").addEventListener("click", () => ManualInputEngine.trigger("left"));
+$("btn-manual-right").addEventListener("click", () => ManualInputEngine.trigger("right"));
+
+$("btn-quit").addEventListener("click", () => {
+  GameEngine.quit();
+  NetworkEngine.teardown();
+  showScreen("screen-menu");
+});
+
+$("btn-rematch").addEventListener("click", () => {
+  showScreen("screen-game");
+  $("wall-streak").hidden = true;
+  $("manual-controls").hidden = (ActiveInputEngine !== ManualInputEngine);
+  GameEngine.requestRematch();
+});
+$("btn-menu").addEventListener("click", () => {
+  NetworkEngine.teardown();
+  showScreen("screen-menu");
+});
+
+window.addEventListener("beforeunload", () => {
+  try{ GameEngine.quit(); NetworkEngine.teardown(); }catch(e){}
+});
+
+})();
 </script>
 </body>
 </html>
